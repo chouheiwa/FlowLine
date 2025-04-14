@@ -118,7 +118,9 @@ class TodoManager:
         id = self.todo_ids.get()
         if self.todo_ids.empty():
             return None, None
-        return id, self.df.loc[id].to_dict()
+        row = self.df.iloc[id]
+        config_dict = row.drop('run_num').to_dict()
+        return id, config_dict
     
     @synchronized
     def put_todo_ids(self, id):
@@ -138,7 +140,7 @@ class TodoManager:
     def update(self, id):
         return self.update_todo_ids(id)
 
-todo_manager = TodoManager()
+# todo_manager = TodoManager()
 
 if __name__ == "__main__":
     process_configs()

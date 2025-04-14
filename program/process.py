@@ -63,12 +63,13 @@ if hasattr(signal, 'SIGBREAK'):  # Windows Ctrl+Break
     signal.signal(signal.SIGBREAK, signal_handler)
 
 class Process:
-    def __init__(self, id: int, dict: dict, todo_id: int, gpu_id: int, on_status_changed=None):
+    def __init__(self, id: int, dict: dict, todo_id: int, gpu_id: int, get_command, on_status_changed=None):
         self.id = id
         self.dict = dict
         self.pid = None
         self.todo_id = todo_id
         self.gpu_id = gpu_id
+        self.get_command = get_command
         
         self.on_status_changed = on_status_changed
         self.status = "pending"  
@@ -80,19 +81,56 @@ class Process:
     def change_status(self, status: str): # 状态跟踪: pending, running, completed, failed, killed
         self.status = status
         if self.on_status_changed:
-            self.on_status_changed(self, status)
+            self.on_status_changed(self)
         
     def run(self):
         print(f"[ID {self.id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Run (dict:'{self.dict}')")
         t = threading.Thread(
             target=self.run_command,
-            args=(self.get_command(),),
+            args=(self.get_command(self.dict, self.gpu_id),),
         )
         t.daemon = True
         t.start()
         self.change_status("running")
         return t
     
+    def run_command(self, cmd):
+        # 创建进程，并设置进程组ID，这样可以杀掉整个进程树
+        if os.name != 'nt':  # 非Windows系统
+            self.proc = subprocess.Popen(
+                cmd, 
+                shell=True, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE,
+                preexec_fn=os.setsid,  # 在新的会话中运行命令，这样可以一次性杀死所有相关进程
+                # start_new_session=True  # 确保创建新会话
+            )
+        else:  # Windows系统
+            self.proc = subprocess.Popen(
+                cmd, 
+                shell=True, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE,
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+            )
+        
+        self.pid = self.proc.pid
+        
+        stdout, stderr = self.proc.communicate()
+        
+        if self.proc.returncode == 0:
+            print(f"[ID {self.id}] [TODO {self.todo_id}] Success!")
+            self.change_status("completed")
+        else:
+            print("==================================================")
+            print(f"[ID {self.id}] [TODO {self.todo_id}] Error code: {self.proc.returncode}")
+            if stderr:
+                print(f"[ID {self.id}] [TODO {self.todo_id}] Stderr:\n{stderr.decode('utf-8')}")
+            print("==================================================")
+            
+            if self.status != "killed":
+                self.change_status("failed")
+            
     def kill(self):
         print(f"[ID {self.id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Kill")
         self.change_status("killed")
@@ -137,101 +175,52 @@ class Process:
         if self.thread and self.thread.is_alive():
             self.thread.join(timeout=3)
             
-    def run_command(self, cmd):
-        # 创建进程，并设置进程组ID，这样可以杀掉整个进程树
-        if os.name != 'nt':  # 非Windows系统
-            self.proc = subprocess.Popen(
-                cmd, 
-                shell=True, 
-                stdout=subprocess.PIPE, 
-                stderr=subprocess.PIPE,
-                preexec_fn=os.setsid,  # 在新的会话中运行命令，这样可以一次性杀死所有相关进程
-                # start_new_session=True  # 确保创建新会话
-            )
-        else:  # Windows系统
-            self.proc = subprocess.Popen(
-                cmd, 
-                shell=True, 
-                stdout=subprocess.PIPE, 
-                stderr=subprocess.PIPE,
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
-            )
-        
-        # 保存进程ID
-        self.pid = self.proc.pid
-        
-        stdout, stderr = self.proc.communicate()
-        
-        if self.proc.returncode == 0:
-            print(f"[ID {self.id}] [TODO {self.todo_id}] Success!")
-            self.change_status("completed")
-        else:
-            print("==================================================")
-            print(f"[ID {self.id}] [TODO {self.todo_id}] Error code: {self.proc.returncode}")
-            if stderr:
-                print(f"[ID {self.id}] [TODO {self.todo_id}] Stderr:\n{stderr.decode('utf-8')}")
-            print("==================================================")
             
-            if self.status != "killed":
-                self.change_status("failed")
-        
-    def get_command(self):
-        return f"python test.py " + " ".join([f"--{key} {value}" for key, value in self.dict.items()])
-        
 class ProcessManager:
-    def __init__(self, on_process_changed=None):
-        self.processes = []
-        self.finished_processes = []
+    def __init__(self, get_command, on_process_changed=None):        
+        self.get_command = get_command
         self.on_process_changed = on_process_changed
         
+        self.processes = []
+        self.finished_processes = []
+        
+        
     def add_process(self, dict: dict, todo_id: int, gpu_id: int):
-        process = Process(len(self.processes), dict, todo_id, gpu_id, self.on_process_status_changed)
+        process = Process(len(self.processes), dict, todo_id, gpu_id, self.get_command, self.on_process_status_changed)
         self.processes.append(process)
         return process
     
-    def get_process_by_id(self, process_id):
-        for process in self.processes:
-            if process.id == process_id:
-                return process
-        for process in self.finished_processes:
-            if process.id == process_id:
-                return process
-        return None
-    
     def kill_process_by_gpu(self, gpu_id: int):
-        processes_to_remove = []
-        for process in self.processes:
+        all_processes = self.processes
+        for process in all_processes:
             if process.gpu_id == gpu_id:
                 process.kill()
-                processes_to_remove.append(process)
-        
-        for process in processes_to_remove:
-            if process in self.processes:  # 再次检查，避免重复删除
-                self.processes.remove(process)
                 
     def kill_process_by_id(self, id: int):
-        process = self.get_process_by_id(id)
-        if process:
-            process.kill()
-        if process in self.processes:
-            self.processes.remove(process)
+        all_processes = self.processes
+        for process in all_processes:
+            if process.id == id:
+                process.kill()
     
-    def on_process_status_changed(self, process, status):
-        print(f"[ID {process.id}] [TODO {process.todo_id}] Process changed status: {status}")
-        if status in ["completed", "failed", "killed"]: 
+    def on_process_status_changed(self, process):
+        # print(f"[ID {process.id}] [TODO {process.todo_id}] Process changed status: {process.status}")
+        if process.status in ["completed", "failed", "killed"]: 
             if process in self.processes:
                 self.processes.remove(process)
                 self.finished_processes.append(process)
-            if self.on_process_changed:
-                self.on_process_changed(process, status)
+        if self.on_process_changed:
+            self.on_process_changed(process)
 
 if __name__ == "__main__":
     # 简单测试
-    def on_completed(process, status):
-        print(f"回调: 进程 {process.id} 完成，状态: {status}")
+    def on_completed(process):
+        print(f"回调: 进程 {process.id} 状态改变为: {process.status}")
+        
+    def get_command(dict, gpu_id):
+        return f"python test.py " + " ".join([f"--{key} {value}" for key, value in dict.items()])
     
     # 注册回调
-    process_manager = ProcessManager(on_process_changed=on_completed)
+    process_manager = ProcessManager(get_command, on_completed)
     
     # 添加进程
     process_manager.add_process({"test": "a"}, 1, 0)
