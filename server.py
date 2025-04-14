@@ -1,4 +1,4 @@
-from flowline.api_test import app
+from flowline.api import app
 
 
 if __name__ == '__main__':
