@@ -86,7 +86,7 @@ class ProgramManager:
             return
         if self.process_manager.add_process(dict, todo_id, gpu_id) is None:
             self.todo_manager.put_todo_ids(todo_id)
-            logger.warning(f"添加进程失败，任务 {todo_id} 重新入队")
+            logger.warning(f"无法生成进程，任务 {todo_id} 重新入队")
         
     def run_process_loop(self):
         """主循环，持续检查并创建新任务"""
@@ -171,6 +171,7 @@ class ProgramManager:
     
     def list_gpus(self):
         """列出所有GPU状态"""
+        self.gpu_manager.flash_all_gpu()
         print("\nGPU状态:")
         print("-" * 70)
         print(f"{'ID':<5} {'状态':<5} {'使用率(%)':<10} {'空闲内存/总内存(MB)':<20} {'用户进程数':<10} {'他人进程数':<10}")

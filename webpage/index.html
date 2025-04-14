@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowLine - GPU管理系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">FlowLine</div>
+        <div class="nav-items">
+            <div class="nav-item active">GPU</div>
+            <div class="nav-item">任务</div>
+            <div class="nav-item">日志</div>
+            <div class="nav-item">设置</div>
+        </div>
+        <div class="user-info">
+            <span>Admin</span>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="section-header">
+                <h2>GPU 列表</h2>
+                <div class="header-actions">
+                    <button id="refreshBtn">刷新</button>
+                </div>
+            </div>
+            <div id="gpuList" class="gpu-list">
+                <!-- GPU卡片将通过JavaScript渲染 -->
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="gpu-details">
+                <div class="section-header">
+                    <h2 id="gpuDetailsTitle">GPU 详情</h2>
+                </div>
+                <div id="gpuDetailsInfo" class="details-info">
+                    <!-- GPU详情将通过JavaScript渲染 -->
+                </div>
+            </div>
+            
+            <div class="gpu-tasks">
+                <div class="section-header">
+                    <h2 id="tasksTitle">活跃任务</h2>
+                </div>
+                <div id="gpuTasks" class="tasks-list">
+                    <!-- 任务列表将通过JavaScript渲染 -->
+                </div>
+            </div>
+            
+            <div class="processes">
+                <div class="section-header">
+                    <h2>所有进程</h2>
+                    <div class="header-actions">
+                        <button id="clearBtn">清空完成/失败</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="processesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>TODO ID</th>
+                                <th>状态</th>
+                                <th>GPU</th>
+                                <th>用户</th>
+                                <th>开始时间</th>
+                                <th>运行时间</th>
+                                <th>命令</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 进程数据将通过JavaScript渲染 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/script.js"></script>
+</body>
+</html>

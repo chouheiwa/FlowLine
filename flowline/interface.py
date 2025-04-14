@@ -19,12 +19,12 @@ class CommandLineInterface(cmd.Cmd):
         """停止处理循环: stop"""
         self.program_manager.stop_process_loop()
         
-    def do_switch(self, arg):
-        """切换处理循环状态: switch"""
+    def do_switchrun(self, arg):
+        """切换处理循环状态: switchrun"""
         is_running = self.program_manager.switch_run()
         print(f"处理循环现在{'正在运行' if is_running else '已停止'}")
         
-    def do_gpu(self, arg):
+    def do_switchgpu(self, arg):
         """切换GPU状态: gpu <id>"""
         try:
             gpu_id = int(arg.strip())

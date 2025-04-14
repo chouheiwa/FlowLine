@@ -75,10 +75,11 @@ class GPU_Manager:
     
     @synchronized
     def choose_gpu(self):
+        self.flash_all_gpu()
         choose_gpu = None
         for gpu in self.all_gpu:
             if self.usable_mark[gpu.id]:
-                info: GPU_info = gpu.flash()
+                info = gpu.info
                 if info.free_memory > self.min_process_memory:
                     if choose_gpu is None:
                         choose_gpu = gpu

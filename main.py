@@ -1,4 +1,4 @@
-from program.interface import run_cli
+from flowline.interface import run_cli
 
 if __name__ == "__main__":
     def get_command(dict, gpu_id):

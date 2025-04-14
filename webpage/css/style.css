@@ -1,0 +1,393 @@
+/* 基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+body {
+    background-color: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* 顶部导航栏 */
+.navbar {
+    background-color: #1e3a8a;
+    color: white;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.nav-items {
+    display: flex;
+}
+
+.nav-item {
+    padding: 0 15px;
+    cursor: pointer;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.nav-item:hover {
+    background-color: #2563eb;
+}
+
+.nav-item.active {
+    background-color: #2563eb;
+    font-weight: 500;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+/* 主内容区 */
+.container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* 侧边栏 */
+.sidebar {
+    width: 300px;
+    background-color: white;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+}
+
+.section-header {
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.section-header h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1e3a8a;
+}
+
+.header-actions button {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.header-actions button:hover {
+    background-color: #1d4ed8;
+}
+
+/* GPU列表 */
+.gpu-list {
+    padding: 10px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.gpu-card {
+    background-color: #f9fafb;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+
+.gpu-card:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.gpu-card.selected {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+}
+
+.gpu-name {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.gpu-status {
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+.gpu-status.available {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.gpu-status.disabled {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.gpu-status.busy {
+    background-color: #fed7aa;
+    color: #9a3412;
+}
+
+.gpu-stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.stat-value {
+    font-weight: 500;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background-color: #3b82f6;
+    border-radius: 4px;
+}
+
+.progress-bar-fill.warning {
+    background-color: #f59e0b;
+}
+
+.progress-bar-fill.danger {
+    background-color: #ef4444;
+}
+
+/* 右侧内容区 */
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    overflow-y: auto;
+    gap: 15px;
+}
+
+.gpu-details, .gpu-tasks, .processes {
+    background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.details-info {
+    padding: 15px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.detail-item {
+    background-color: #f9fafb;
+    padding: 12px;
+    border-radius: 6px;
+}
+
+.detail-label {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.detail-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* 任务列表 */
+.tasks-list {
+    padding: 15px;
+}
+
+.task-card {
+    background-color: #f9fafb;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.task-status {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.task-status.running {
+    background-color: #10b981;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+}
+
+.task-status.completed {
+    background-color: #3b82f6;
+}
+
+.task-status.failed {
+    background-color: #ef4444;
+}
+
+.task-status.killed {
+    background-color: #6b7280;
+}
+
+.task-info {
+    flex: 1;
+}
+
+.task-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.task-id {
+    font-weight: 600;
+}
+
+.task-todo-id {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.task-command {
+    color: #4b5563;
+    font-size: 0.9rem;
+    font-family: monospace;
+    background-color: #f3f4f6;
+    padding: 5px 8px;
+    border-radius: 4px;
+    word-break: break-all;
+}
+
+.task-actions button {
+    background-color: #f3f4f6;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.task-actions button:hover {
+    background-color: #e5e7eb;
+}
+
+.task-actions button.kill {
+    color: #b91c1c;
+}
+
+.task-actions button.kill:hover {
+    background-color: #fee2e2;
+}
+
+/* 进程表格 */
+.table-container {
+    padding: 15px;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    text-align: left;
+    padding: 10px 15px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #4b5563;
+}
+
+tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+.process-status {
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.process-status.running {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.process-status.completed {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.process-status.failed {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.process-status.killed {
+    background-color: #e5e7eb;
+    color: #1f2937;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        max-height: 300px;
+    }
+    
+    .details-info {
+        grid-template-columns: 1fr;
+    }
+}
