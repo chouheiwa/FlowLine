@@ -50,11 +50,16 @@ FlowLine是一个GPU任务管理和监控系统，提供命令行和Web界面，
 
 ### 启动API服务器
 
+后端是一个 Flask 应用，您需要运行 server.py 文件来启动它：
 ```
-python server.py
+cd ~/flowline && python server.py
 ```
 
-服务器默认运行在 http://localhost:5000
+使用 Python 的内置 HTTP 服务器来提供前端文件：
+```
+cd ~/flowline/webpage && python -m http.server 8000
+```
+这会在 http://localhost:8000 上启动一个简单的 HTTP 服务器，提供前端 HTML、CSS 和 JavaScript 文件。
 
 ### 访问Web界面
 

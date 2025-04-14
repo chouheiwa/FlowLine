@@ -25,6 +25,7 @@ except Exception as e:
     logger = SimpleLogger()
 
 app = Flask(__name__)
+
 CORS(app)
 
 program_manager = None
@@ -113,9 +114,6 @@ def gpu_to_frontend_format(info, index, usable):
         'user_process_num': info.user_process_num,
         'other_process_num': info.all_process_num - info.user_process_num
     }
-    
-    logger.info(f"GPU {index} to frontend format: {dict}")
-    
     return dict
 
 # 进程数据转换为前端格式
@@ -143,9 +141,6 @@ def process_to_frontend_format(process):
         'runTime': run_time_str,
         'command': process.cmd
     }
-    
-    logger.info(f"Process {process.id} to frontend format: {dict}")
-    
     return dict
 
 @app.route('/api/gpus', methods=['GET'])

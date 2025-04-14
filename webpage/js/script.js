@@ -6,7 +6,12 @@ let gpuData = [];
 let taskData = [];
 
 // 设置刷新按钮点击事件
-document.getElementById('refreshBtn').addEventListener('click', fetchData);
+document.getElementById('refreshBtn').addEventListener('click', function(e) {
+    // 防止页面刷新
+    e.preventDefault();
+    console.log("刷新按钮被点击");
+    fetchData();
+});
 
 // 设置清空按钮点击事件
 document.getElementById('clearBtn').addEventListener('click', clearCompletedTasks);
@@ -42,16 +47,22 @@ async function fetchData() {
         console.log("UI渲染完成");
     } catch (error) {
         console.error('获取数据失败:', error);
+        // 在页面上显示错误信息
+        document.getElementById('gpuList').innerHTML = `<div class="error-message">获取数据失败: ${error.message}</div>`;
     }
 }
 
 // 获取GPU数据
 async function fetchGpuData() {
     try {
+        console.log(`正在请求: ${API_BASE_URL}/gpus`);
         const response = await fetch(`${API_BASE_URL}/gpus`);
+        console.log('GPU数据响应状态:', response.status);
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
         gpuData = await response.json();
         return gpuData;
     } catch (error) {
