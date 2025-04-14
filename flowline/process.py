@@ -6,6 +6,7 @@ import psutil
 import atexit
 import signal
 import sys
+import datetime
 
 from .log import Log
 
@@ -13,25 +14,25 @@ logger = Log(__name__)
 
 ####################################
 
-_all_processes = []
+# _all_processes = []
 
-def clean_all_processes():
-    print("==== clean_all_processes ====")
-    for process in _all_processes:
-        process.kill()
+# def clean_all_processes():
+#     print("==== clean_all_processes ====")
+#     for process in _all_processes:
+#         process.kill()
 
-atexit.register(clean_all_processes)
+# atexit.register(clean_all_processes)
 
-def signal_handler(signum, frame):
-    print(f"收到信号 {signum}，正在终止...")
-    clean_all_processes()
-    sys.exit(0)
+# def signal_handler(signum, frame):
+#     print(f"收到信号 {signum}，正在终止...")
+#     clean_all_processes()
+#     sys.exit(0)
 
-signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
-signal.signal(signal.SIGTERM, signal_handler)  # kill
-signal.signal(signal.SIGTSTP, signal_handler)  # Ctrl+Z
-if hasattr(signal, 'SIGBREAK'):  # Windows Ctrl+Break
-    signal.signal(signal.SIGBREAK, signal_handler)
+# signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
+# signal.signal(signal.SIGTERM, signal_handler)  # kill
+# signal.signal(signal.SIGTSTP, signal_handler)  # Ctrl+Z
+# if hasattr(signal, 'SIGBREAK'):  # Windows Ctrl+Break
+#     signal.signal(signal.SIGBREAK, signal_handler)
 
 ####################################
 
@@ -42,14 +43,16 @@ class Process:
         self.pid = None
         self.todo_id = todo_id
         self.gpu_id = gpu_id
-        self.get_command = get_command
+        self.cmd = get_command(dict, gpu_id)
+        self.start_time = datetime.datetime.now()
         
         self.on_status_changed = on_status_changed
         self.status = "pending"  
         
         self.proc = None
+        self.pid = None
         self.thread = self.run()
-        _all_processes.append(self)
+        # _all_processes.append(self)
         
     def change_status(self, status: str): # 状态跟踪: pending, running, completed, failed, killed
         self.status = status
@@ -60,7 +63,7 @@ class Process:
         logger.info(f"[ID {self.id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Run (dict:'{self.dict}')")
         t = threading.Thread(
             target=self.run_command,
-            args=(self.get_command(self.dict, self.gpu_id),),
+            args=(self.cmd,),
         )
         t.daemon = True
         t.start()

@@ -6,12 +6,18 @@ from .log import Log
 logger = Log(__name__)
 
 class GPU_info:
-    def __init__(self, free_memory, memory, utilization, other_user_process_num, time):
+    def __init__(self, free_memory, memory, utilization, all_process_num, time, name, temperature, power, max_power):
         self.free_memory = free_memory
         self.memory = memory
         self.utilization = utilization
-        self.other_user_process_num = other_user_process_num
+        self.user_process_num = 0
+        self.all_process_num = all_process_num
         self.time = time
+        self.name = name
+        self.temperature = temperature
+        self.power = power
+        self.max_power = max_power
+        
 
 class GPU:
     def __init__(self, id):
@@ -19,7 +25,6 @@ class GPU:
         self.info_history = []
         self.info_history_length = 10
         self.info = []
-        self.user_process_num = 0
         
     def flash(self):
         """
@@ -34,13 +39,17 @@ class GPU:
         memory = memory_info.total / (1024 ** 2)
         free_memory = memory_info.free / (1024 ** 2)
         utilization = utilization_info.gpu
-        other_user_process_num = len(process_info) - self.user_process_num
+        all_process_num = len(process_info)
+        name = pynvml.nvmlDeviceGetName(handle).decode('utf-8')
+        temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
+        power = pynvml.nvmlDeviceGetPowerUsage(handle) / 1000
+        max_power = pynvml.nvmlDeviceGetPowerManagementLimit(handle) / 1000
             
-        self.info = GPU_info(free_memory, memory, utilization, other_user_process_num, time.time())
+        self.info = GPU_info(free_memory, memory, utilization, all_process_num, time.time(), name, temperature, power, max_power)
         self.info_history.append(self.info)
         self.info_history = self.info_history[-self.info_history_length:]
         
-        logger.info(f"GPU {self.id} flashed: free memory={self.info.free_memory}MB, utilization={self.info.utilization}%, other user process num={self.info.other_user_process_num}") 
+        logger.info(f"GPU {self.id} flashed: free memory={self.info.free_memory}MB, utilization={self.info.utilization}%, all process num={self.info.all_process_num}, name={self.info.name}") 
         
         pynvml.nvmlShutdown()
         return self.info

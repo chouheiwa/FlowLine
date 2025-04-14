@@ -97,5 +97,5 @@ if __name__ == "__main__":
     run_cli(get_command)
 
 """
-    python -m program.interface
+    python -m flowline.interface
 """  

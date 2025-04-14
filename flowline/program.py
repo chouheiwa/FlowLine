@@ -15,29 +15,29 @@ logger = Log(__name__)
 
 ####################################
 
-_all_programs = []
+# _all_programs = []
 
-def clean_all_programs():
-    print("==== clean_all_programs ====")
-    for program in _all_programs:
-        program.exit()
-    try:
-        os.system("ps aux | grep 'python' | grep -v grep | awk '{print $2}' | xargs -r kill -9")
-    except:
-        pass
+# def clean_all_programs():
+#     print("==== clean_all_programs ====")
+#     for program in _all_programs:
+#         program.exit()
+#     try:
+#         os.system("ps aux | grep 'python' | grep -v grep | awk '{print $2}' | xargs -r kill -9")
+#     except:
+#         pass
         
-atexit.register(clean_all_programs)
+# atexit.register(clean_all_programs)
 
-def signal_handler(signum, frame):
-    print(f"收到信号 {signum}，正在终止...")
-    clean_all_programs()
-    sys.exit(0)
+# def signal_handler(signum, frame):
+#     print(f"收到信号 {signum}，正在终止...")
+#     clean_all_programs()
+#     sys.exit(0)
 
-signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
-signal.signal(signal.SIGTERM, signal_handler)  # kill
-signal.signal(signal.SIGTSTP, signal_handler)  # Ctrl+Z
-if hasattr(signal, 'SIGBREAK'):  # Windows Ctrl+Break
-    signal.signal(signal.SIGBREAK, signal_handler)
+# signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
+# signal.signal(signal.SIGTERM, signal_handler)  # kill
+# signal.signal(signal.SIGTSTP, signal_handler)  # Ctrl+Z
+# if hasattr(signal, 'SIGBREAK'):  # Windows Ctrl+Break
+#     signal.signal(signal.SIGBREAK, signal_handler)
 
 ####################################
 
@@ -49,7 +49,7 @@ class ProgramManager:
         self.todo_manager = TodoManager()
         self.if_run = True
         self._main_thread = None 
-        _all_programs.append(self)
+        # _all_programs.append(self)
         
     def synchronized(func):
         def wrapper(self, *args, **kwargs):
@@ -173,15 +173,17 @@ class ProgramManager:
         """列出所有GPU状态"""
         self.gpu_manager.flash_all_gpu()
         print("\nGPU状态:")
-        print("-" * 70)
-        print(f"{'ID':<5} {'状态':<5} {'使用率(%)':<10} {'空闲内存/总内存(MB)':<20} {'用户进程数':<10} {'他人进程数':<10}")
-        print("-" * 70)
+        print("-" * 130)
+        print(f"{'ID':<5} {'状态':<5} {'使用率(%)':<10} {'空闲内存/总内存(MB)':<20} {'用户进程数/总进程数':<20} {'温度':<10} {'功率/最大功率(W)':<20}")
+        print("-" * 130)
         for i, gpu in enumerate(self.gpu_manager.all_gpu):
             info = gpu.flash()
             status = "可用" if self.gpu_manager.usable_mark[i] else "禁用"
             memory_str = f"{info.free_memory:.0f}/{info.memory:.0f}"
-            print(f"{gpu.id:<5} {status:<5} {info.utilization:<10.2f} {memory_str:<20} {gpu.user_process_num:<8} {info.other_user_process_num:<8}")
-        print("-" * 70)
+            power_str = f"{info.power:.0f}/{info.max_power:.0f}"
+            process_str = f"{info.user_process_num}/{info.all_process_num}"
+            print(f"{gpu.id:<5} {status:<5} {info.utilization:<10.2f} {memory_str:<20} {process_str:<20} {info.temperature:<10} {power_str:<20}")
+        print("-" * 130)
         
     def exit(self):
         """安全退出，终止所有进程和线程"""
