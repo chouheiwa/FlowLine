@@ -2,7 +2,10 @@ from tqdm import tqdm
 import pandas as pd
 import os
 import threading
-import queue  # 导入标准库的queue模块
+import queue
+from .log import Log
+
+logger = Log(__name__)
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 todo_excel_path = os.path.join(current_path, "todo.xlsx")
@@ -73,6 +76,8 @@ def process_configs():
 
 # -------------------------------
 
+
+
 def read_configs():
     """
     Read the configuration parameters from the Excel file.
@@ -120,25 +125,19 @@ class TodoManager:
             return None, None
         row = self.df.iloc[id]
         config_dict = row.drop('run_num').to_dict()
+        logger.info(f"获取任务 {id} 配置: {config_dict}")
         return id, config_dict
     
     @synchronized
     def put_todo_ids(self, id):
         self.todo_ids.put(id)
-    
+        logger.info(f"任务 {id} 重新入队")
+        
     @synchronized
     def update_todo_ids(self, id):
         self.df.loc[id, 'run_num'] += 1
         self.df.to_excel(todo_excel_path, index=False)
-        
-    def get(self):
-        return self.get_next_todo()
-        
-    def put(self, id):
-        return self.put_todo_ids(id)
-        
-    def update(self, id):
-        return self.update_todo_ids(id)
+        logger.info(f"更新任务 {id} 运行次数: {self.df.loc[id, 'run_num']}")
 
 # todo_manager = TodoManager()
 

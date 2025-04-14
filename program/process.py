@@ -1,66 +1,39 @@
 import os
 import threading
 import subprocess
-import sys
 import time
-import signal
 import psutil
 import atexit
-import multiprocessing
+import signal
+import sys
 
-# 存储所有创建的进程实例，便于程序退出时清理
+from .log import Log
+
+logger = Log(__name__)
+
+####################################
+
 _all_processes = []
 
-# 退出时清理所有子进程
-def cleanup_all_processes():
-    print("正在清理所有子进程...")
-    for proc in _all_processes:
-        try:
-            if proc.proc:
-                proc.kill()
-        except:
-            pass
-    
-    # 检查是否有任何遗留进程
-    if psutil.WINDOWS:
-        # Windows系统上使用taskkill确保Python进程和所有子进程终止
-        python_pids = []
-        try:
-            for p in psutil.process_iter(['pid', 'name', 'cmdline']):
-                if 'python' in p.info['name'].lower() and 'test.py' in ' '.join(p.info.get('cmdline', [])):
-                    python_pids.append(p.info['pid'])
-            
-            if python_pids:
-                print(f"发现{len(python_pids)}个遗留Python测试进程，正在终止...")
-                for pid in python_pids:
-                    try:
-                        os.system(f'taskkill /F /T /PID {pid}')
-                    except:
-                        pass
-        except:
-            pass
-    else:
-        # Unix系统
-        try:
-            # 终止所有包含test.py的Python进程
-            os.system("ps aux | grep 'python.*test.py' | grep -v grep | awk '{print $2}' | xargs -r kill -9")
-        except:
-            pass
+def clean_all_processes():
+    print("==== clean_all_processes ====")
+    for process in _all_processes:
+        process.kill()
 
-# 注册退出处理函数
-atexit.register(cleanup_all_processes)
+atexit.register(clean_all_processes)
 
-# 注册信号处理函数
 def signal_handler(signum, frame):
     print(f"收到信号 {signum}，正在终止...")
-    cleanup_all_processes()
+    clean_all_processes()
     sys.exit(0)
 
-# 为常见的终止信号注册处理函数
 signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
 signal.signal(signal.SIGTERM, signal_handler)  # kill
+signal.signal(signal.SIGTSTP, signal_handler)  # Ctrl+Z
 if hasattr(signal, 'SIGBREAK'):  # Windows Ctrl+Break
     signal.signal(signal.SIGBREAK, signal_handler)
+
+####################################
 
 class Process:
     def __init__(self, id: int, dict: dict, todo_id: int, gpu_id: int, get_command, on_status_changed=None):
@@ -84,7 +57,7 @@ class Process:
             self.on_status_changed(self)
         
     def run(self):
-        print(f"[ID {self.id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Run (dict:'{self.dict}')")
+        logger.info(f"[ID {self.id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Run (dict:'{self.dict}')")
         t = threading.Thread(
             target=self.run_command,
             args=(self.get_command(self.dict, self.gpu_id),),
@@ -118,21 +91,21 @@ class Process:
         
         stdout, stderr = self.proc.communicate()
         
-        if self.proc.returncode == 0:
-            print(f"[ID {self.id}] [TODO {self.todo_id}] Success!")
-            self.change_status("completed")
-        else:
-            print("==================================================")
-            print(f"[ID {self.id}] [TODO {self.todo_id}] Error code: {self.proc.returncode}")
-            if stderr:
-                print(f"[ID {self.id}] [TODO {self.todo_id}] Stderr:\n{stderr.decode('utf-8')}")
-            print("==================================================")
-            
-            if self.status != "killed":
+        if self.status != "killed":
+            if self.proc.returncode == 0:
+                logger.info(f"[ID {self.id}] [TODO {self.todo_id}] Success!")
+                self.change_status("completed")
+            else:
+                logger.error(f"[ID {self.id}] [TODO {self.todo_id}] Error code: {self.proc.returncode}")
+                if stderr:
+                    logger.error(f"[ID {self.id}] [TODO {self.todo_id}] Stderr:\n{stderr.decode('utf-8')}")
                 self.change_status("failed")
             
     def kill(self):
-        print(f"[ID {self.id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Kill")
+        if self.status == "killed":
+            logger.info(f"[ID {self.id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Already killed")
+            return
+        logger.info(f"[ID {self.id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Kill")
         self.change_status("killed")
         if self.proc:
             try:
@@ -169,7 +142,7 @@ class Process:
                 #     os.killpg(os.getpgid(pid), signal.SIGKILL)
                     
             except Exception as e:
-                print(f"Error killing process: {e}")
+                logger.error(f"Error killing process: {e}")
                 
         # 最多等待3秒钟让线程结束
         if self.thread and self.thread.is_alive():
@@ -177,30 +150,57 @@ class Process:
             
             
 class ProcessManager:
-    def __init__(self, get_command, on_process_changed=None):        
+    def __init__(self, get_command, on_process_changed=None):
+        self.id = 0
         self.get_command = get_command
         self.on_process_changed = on_process_changed
         
+        self.max_processes = 10
         self.processes = []
         self.finished_processes = []
         
+    def set_max_processes(self, max_processes: int):
+        self.max_processes = max_processes
+        
+    def get_max_processes(self):
+        return self.max_processes
         
     def add_process(self, dict: dict, todo_id: int, gpu_id: int):
-        process = Process(len(self.processes), dict, todo_id, gpu_id, self.get_command, self.on_process_status_changed)
-        self.processes.append(process)
-        return process
-    
+        try:
+            if len(self.processes) >= self.max_processes:
+                logger.warning(f"进程数超过最大限制 {self.max_processes}")
+                return None
+            process = Process(self.id, dict, todo_id, gpu_id, self.get_command, self.on_process_status_changed)
+            self.processes.append(process)
+            self.id += 1
+            return process
+        except Exception as e:
+            logger.error(f"添加进程失败: {e}")
+            return None
+            
     def kill_process_by_gpu(self, gpu_id: int):
-        all_processes = self.processes
-        for process in all_processes:
-            if process.gpu_id == gpu_id:
-                process.kill()
-                
+        processes_to_kill = [p for p in self.processes if p.gpu_id == gpu_id]
+        num = len(processes_to_kill)
+        logger.info(f"找到 {num} 个GPU {gpu_id}的进程需要终止")
+        for process in processes_to_kill:
+            logger.info(f"终止进程 {process.id} : {process.gpu_id}")
+            process.kill()
+        return num
+        
     def kill_process_by_id(self, id: int):
-        all_processes = self.processes
-        for process in all_processes:
+        target_process = None
+        for process in self.processes:
             if process.id == id:
-                process.kill()
+                target_process = process
+                break
+                
+        if target_process:
+            logger.info(f"终止进程ID {id}")
+            target_process.kill()
+            return True
+        else:
+            logger.warning(f"找不到进程ID {id}")
+            return False
     
     def on_process_status_changed(self, process):
         # print(f"[ID {process.id}] [TODO {process.todo_id}] Process changed status: {process.status}")
@@ -210,6 +210,15 @@ class ProcessManager:
                 self.finished_processes.append(process)
         if self.on_process_changed:
             self.on_process_changed(process)
+            
+    def kill_all_processes(self):
+        processes_to_kill = list(self.processes)
+        logger.info(f"终止所有进程，共 {len(processes_to_kill)} 个")
+        
+        for process in processes_to_kill:
+            process.kill()
+            
+        return len(processes_to_kill)
 
 if __name__ == "__main__":
     # 简单测试
@@ -217,14 +226,14 @@ if __name__ == "__main__":
         print(f"回调: 进程 {process.id} 状态改变为: {process.status}")
         
     def get_command(dict, gpu_id):
-        return f"python test.py " + " ".join([f"--{key} {value}" for key, value in dict.items()])
+        return f"CUDA_VISIBLE_DEVICES={gpu_id} python test.py " + " ".join([f"--{key} {value}" for key, value in dict.items()])
     
     # 注册回调
     process_manager = ProcessManager(get_command, on_completed)
     
     # 添加进程
-    process_manager.add_process({"test": "a"}, 1, 0)
-    process_manager.add_process({"test": "b"}, 2, 0)
+    process_manager.add_process({"test": "a"}, 1, 4)
+    process_manager.add_process({"test": "b"}, 2, 4)
     
     # 等待一段时间
     time.sleep(5)
