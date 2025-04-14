@@ -132,6 +132,8 @@ body {
 .gpu-name {
     font-weight: 600;
     margin-bottom: 8px;
+    display: inline-block;
+    vertical-align: middle; 
 }
 
 .gpu-status {
@@ -139,8 +141,9 @@ body {
     border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 500;
-    display: inline-block;
     margin-bottom: 8px;
+    display: inline-block;
+    vertical-align: middle; 
 }
 
 .gpu-status.available {
@@ -165,17 +168,27 @@ body {
     font-size: 0.9rem;
 }
 
-.stat-value {
+.progress-bar-container {
+    position: flex;
+    display: inline-block;
+}
+
+.progress-bar-text {
+    position: flex;
+    font-size: 13px;
     font-weight: 500;
+    color: #4c505a;
+    pointer-events: none;
 }
 
 .progress-bar {
+    position: relative;
     width: 100%;
     height: 8px;
-    background-color: #e5e7eb;
+    background-color: #e3e3e3;
     border-radius: 4px;
     overflow: hidden;
-    margin-top: 5px;
+    margin-top: 0px;
 }
 
 .progress-bar-fill {
@@ -325,17 +338,24 @@ body {
 .table-container {
     padding: 15px;
     overflow-x: auto;
+    max-width: 100%;
+    border-radius: 6px;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
+    min-width: 900px;
 }
 
 th, td {
     text-align: left;
     padding: 10px 15px;
     border-bottom: 1px solid #e5e7eb;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 th {
@@ -374,6 +394,22 @@ tbody tr:hover {
 .process-status.killed {
     background-color: #e5e7eb;
     color: #1f2937;
+}
+
+/* 设置各列的宽度 */
+th:nth-child(1), td:nth-child(1) { width: 80px; }
+th:nth-child(2), td:nth-child(2) { width: 110px; }
+th:nth-child(3), td:nth-child(3) { width: 90px; }
+th:nth-child(4), td:nth-child(4) { width: 190px; }
+th:nth-child(5), td:nth-child(5) { width: 120px; }
+th:nth-child(6), td:nth-child(6) { width: 190px; }
+th:nth-child(7), td:nth-child(7) { width: 100px; }
+th:nth-child(8), td:nth-child(8) { width: 400px; }
+
+/* 命令列可以在必要时允许文本换行 */
+.command {
+    white-space: normal;
+    word-break: break-word;
 }
 
 /* 响应式布局 */

@@ -68,6 +68,16 @@ const taskData = [
         startTime: '2023-05-16 09:05:12',
         runTime: '00:15:22',
         command: 'python inference.py --input data/test --output results/test'
+    },
+    {
+        id: 'task-4',
+        todoId: 'todo-461',
+        status: 'killed',
+        gpu: 'gpu-2',
+        user: 'wang.wu',
+        startTime: '2023-05-16 09:05:12',
+        runTime: '00:15:22',
+        command: 'python inference.py --input data/test --output results/test'
     }
 ];
 
@@ -101,16 +111,16 @@ function renderGpuList() {
             <div class="gpu-name">${gpu.name}</div>
             <div class="gpu-status ${gpu.status}">${getStatusText(gpu.status)}</div>
             <div class="gpu-stats">
-                <div>
-                    <div>显存: <span class="stat-value">${gpu.memory.used}GB / ${gpu.memory.total}GB</span></div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-text">显存：${gpu.memory.used}GB / ${gpu.memory.total}GB</div>
                     <div class="progress-bar">
                         <div class="progress-bar-fill ${memoryClass}" style="width: ${memoryPercent}%"></div>
                     </div>
                 </div>
-                <div>
-                    <div>利用率: <span class="stat-value">${gpu.utilization}%</span></div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-text">利用率：${gpu.utilization}%</div>
                     <div class="progress-bar">
-                        <div class="progress-bar-fill ${utilizationClass}" style="width: ${gpu.utilization}%"></div>
+                        <div class="progress-bar-fill ${memoryClass}" style="width: ${memoryPercent}%"></div>
                     </div>
                 </div>
             </div>
