@@ -19,6 +19,8 @@ prepare()
 app = Flask(__name__)
 CORS(app)
 
+def get_app(get_command):
+    return app
 
 @app.route('/api/gpus', methods=['GET'])
 def get_gpus():

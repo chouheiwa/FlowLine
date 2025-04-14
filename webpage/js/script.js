@@ -11,14 +11,17 @@ document.getElementById('refreshBtn').addEventListener('click', fetchData);
 // 设置清空按钮点击事件
 document.getElementById('clearBtn').addEventListener('click', clearCompletedTasks);
 
-// 初始化页面
-fetchData();
+// 初始化页面 - 移除这里的直接调用
+// fetchData(); 
+
+// 在 DOMContentLoaded 事件中初始化
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("页面已加载，开始初始化...");
     // 初始加载数据
     fetchData();
     
-    // 设置周期性更新（每10秒刷新一次）
-    setInterval(fetchData, 10000);
+    // 设置周期性更新，降低频率（改为30秒一次）
+    setInterval(fetchData, 30000);
 });
 
 // 获取所有数据
@@ -174,7 +177,7 @@ function renderGpuList() {
         const isSelected = selectedGpu ? selectedGpu.dataset.id === gpu.id : gpu.id === gpuData[0].id;
         
         gpuCard.className = `gpu-card ${isSelected ? 'selected' : ''}`;
-        gpuCard.dataset.id = gpu.id;
+        gpuCard.dataset.id = gpu.gpu_id;
         gpuCard.innerHTML = `
             <div class="gpu-name">GPU ${gpu.gpu_id}</div>
             <div class="gpu-status ${gpu.status}">${getStatusText(gpu.status)}</div>
@@ -204,7 +207,7 @@ function renderGpuList() {
         // 添加右键菜单，用于切换GPU状态
         gpuCard.addEventListener('contextmenu', async (e) => {
             e.preventDefault();
-            const isOn = await switchGpu(gpu.id);
+            const isOn = await switchGpu(gpu.gpu_id);
             if (isOn !== null) {
                 fetchData(); // 刷新数据
             }
@@ -341,7 +344,7 @@ function renderProcessTable() {
 
 // 获取GPU显示名称
 function getGpuName(gpuId) {
-    const gpu = gpuData.find(g => g.id === gpuId);
+    const gpu = gpuData.find(g => g.gpu_id === gpuId);
     return gpu ? gpu.name : gpuId;
 }
 
