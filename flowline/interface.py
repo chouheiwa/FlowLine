@@ -11,20 +11,12 @@ class CommandLineInterface(cmd.Cmd):
         super().__init__()
         self.program_manager = program_manager
         
-    def do_start(self, arg):
-        """启动处理循环: start"""
-        self.program_manager.start_process_loop()
+    def do_run(self, arg):
+        """切换处理循环状态: run"""
+        is_run = self.program_manager.switch_run()
+        print(f"处理循环现在{'正在运行' if is_run else '已停止'}")
         
-    def do_stop(self, arg):
-        """停止处理循环: stop"""
-        self.program_manager.stop_process_loop()
-        
-    def do_switchrun(self, arg):
-        """切换处理循环状态: switchrun"""
-        is_running = self.program_manager.switch_run()
-        print(f"处理循环现在{'正在运行' if is_running else '已停止'}")
-        
-    def do_switchgpu(self, arg):
+    def do_gpu(self, arg):
         """切换GPU状态: gpu <id>"""
         try:
             gpu_id = int(arg.strip())
@@ -48,8 +40,8 @@ class CommandLineInterface(cmd.Cmd):
         except ValueError:
             print("错误: 进程ID必须是数字")
             
-    def do_list(self, arg):
-        """列出所有正在运行的进程: list"""
+    def do_ls(self, arg):
+        """列出所有正在运行的进程: ls"""
         self.program_manager.list_processes()
         
     def do_gpus(self, arg):
@@ -58,8 +50,6 @@ class CommandLineInterface(cmd.Cmd):
         
     def do_exit(self, arg=None):
         """退出程序: exit"""
-        print("正在清理资源...")
-        self.program_manager.exit()
         print("再见!")
         return True
         
@@ -69,7 +59,7 @@ class CommandLineInterface(cmd.Cmd):
         
     def do_EOF(self, arg):
         """Ctrl+D退出程序"""
-        print()  # 打印一个空行
+        print()
         return self.do_exit(arg)
     
     def do_max(self, arg):
@@ -80,21 +70,18 @@ class CommandLineInterface(cmd.Cmd):
         except ValueError:
             print("错误: 最大进程数必须是数字")
 
-def run_cli(get_command):
+def run_cli(func):
     """启动命令行界面"""
-    program = ProgramManager(get_command)
+    program = ProgramManager(func)
     cli = CommandLineInterface(program)
     try:
         cli.cmdloop()
     except KeyboardInterrupt:
         print("\n接收到中断信号，正在退出...")
-        program.stop_process_loop()
         sys.exit(0)
 
 if __name__ == "__main__":
-    def get_command(dict, gpu_id):
-        return f"CUDA_VISIBLE_DEVICES={gpu_id} python test.py " + " ".join([f"--{key} {value}" for key, value in dict.items()])
-    run_cli(get_command)
+    pass
 
 """
     python -m flowline.interface

@@ -1,6 +1,9 @@
 from flowline.interface import run_cli
+import time
 
 if __name__ == "__main__":
-    def get_command(dict, gpu_id):
-        return f"CUDA_VISIBLE_DEVICES={gpu_id} python test.py " + " ".join([f"--{key} {value}" for key, value in dict.items()])
-    run_cli(get_command)
+    def func(dict, gpu_id):
+        while True:
+            print(dict, gpu_id)
+            time.sleep(1)
+    run_cli(func)

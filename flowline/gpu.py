@@ -6,13 +6,13 @@ from .log import Log
 logger = Log(__name__)
 
 class GPU_info:
-    def __init__(self, free_memory, memory, utilization, all_process_num, time, name, temperature, power, max_power):
+    def __init__(self, free_memory, total_memory, utilization, all_process_num, name, temperature, power, max_power):
         self.free_memory = free_memory
-        self.memory = memory
+        self.total_memory = total_memory
         self.utilization = utilization
         self.user_process_num = 0
         self.all_process_num = all_process_num
-        self.time = time
+        self.time = time.time(),
         self.name = name
         self.temperature = temperature
         self.power = power
@@ -20,23 +20,24 @@ class GPU_info:
         
 
 class GPU:
-    def __init__(self, id):
-        self.id = id
+    def __init__(self, gpu_id, on_flash=None):
+        self.gpu_id = gpu_id
         self.info_history = []
         self.info_history_length = 10
         self.info = []
+        self.user_process_num = 0
+        self.on_flash = on_flash
+        self.monitor_interval = 5
+        self.monitor_thread = self._run_monitor()
         
     def flash(self):
-        """
-        更新GPU的空闲内存和利用率。
-        """
         pynvml.nvmlInit()
-        handle = pynvml.nvmlDeviceGetHandleByIndex(self.id)
+        handle = pynvml.nvmlDeviceGetHandleByIndex(self.gpu_id)
         memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
         utilization_info = pynvml.nvmlDeviceGetUtilizationRates(handle)
         process_info = pynvml.nvmlDeviceGetComputeRunningProcesses(handle)
 
-        memory = memory_info.total / (1024 ** 2)
+        total_memory = memory_info.total / (1024 ** 2)
         free_memory = memory_info.free / (1024 ** 2)
         utilization = utilization_info.gpu
         all_process_num = len(process_info)
@@ -45,19 +46,30 @@ class GPU:
         power = pynvml.nvmlDeviceGetPowerUsage(handle) / 1000
         max_power = pynvml.nvmlDeviceGetPowerManagementLimit(handle) / 1000
             
-        self.info = GPU_info(free_memory, memory, utilization, all_process_num, time.time(), name, temperature, power, max_power)
+        self.info = GPU_info(free_memory, total_memory, utilization, all_process_num, name, temperature, power, max_power)
         self.info_history.append(self.info)
         self.info_history = self.info_history[-self.info_history_length:]
         
-        logger.info(f"GPU {self.id} flashed: free memory={self.info.free_memory}MB, utilization={self.info.utilization}%, all process num={self.info.all_process_num}, name={self.info.name}") 
-        
+        logger.info(f"GPU: GPU {self.gpu_id} flashed") 
+        if self.on_flash:
+            self.on_flash(self.gpu_id, self.info)
         pynvml.nvmlShutdown()
-        return self.info
+        
+    def _monitor_gpu(self):
+        while True:
+            self.flash()
+            time.sleep(self.monitor_interval)
+            
+    def _run_monitor(self):
+        thread = threading.Thread(target=self._monitor_gpu)
+        thread.daemon = True
+        thread.start()
+        return thread
     
 class GPU_Manager:
-    def __init__(self, all_gpu_num, use_gpu_id: list):
+    def __init__(self, all_gpu_num, use_gpu_id: list, on_flash=None):
         self._lock = threading.Lock()
-        self.all_gpu = [GPU(i) for i in range(all_gpu_num)]
+        self.all_gpu = [GPU(i, on_flash) for i in range(all_gpu_num)]
         self.usable_mark = [False] * len(self.all_gpu)
         for gpu_id in use_gpu_id:
             self.usable_mark[gpu_id] = True
@@ -69,6 +81,9 @@ class GPU_Manager:
             with self._lock:
                 return func(self, *args, **kwargs)
         return wrapper
+    
+    def on_gpu_flash(self, gpu_id, info):
+        logger.info(f"GPU_Manager: GPU {gpu_id} flashed: {info}")
     
     def update_user_process_num(self, gpu_id, pid, status):
         if status == "running":
@@ -87,7 +102,7 @@ class GPU_Manager:
         self.flash_all_gpu()
         choose_gpu = None
         for gpu in self.all_gpu:
-            if self.usable_mark[gpu.id]:
+            if self.usable_mark[gpu.gpu_id]:
                 info = gpu.info
                 if info.free_memory > self.min_process_memory:
                     if choose_gpu is None:
@@ -98,20 +113,20 @@ class GPU_Manager:
                     elif info.utilization == gpu.info.utilization:
                         if info.free_memory > choose_gpu.info.free_memory:
                             choose_gpu = gpu
-        return choose_gpu.id
+        return choose_gpu.gpu_id
         
     @synchronized
-    def turn_on_gpu(self, id):
-        self.usable_mark[id] = True
+    def turn_on_gpu(self, gpu_id):
+        self.usable_mark[gpu_id] = True
         
     @synchronized
-    def turn_off_gpu(self, id):
-        self.usable_mark[id] = False
+    def turn_off_gpu(self, gpu_id):
+        self.usable_mark[gpu_id] = False
 
     @synchronized
-    def switch_gpu(self, id):
-        self.usable_mark[id] = not self.usable_mark[id]
-        return self.usable_mark[id]
+    def switch_gpu(self, gpu_id):
+        self.usable_mark[gpu_id] = not self.usable_mark[gpu_id]
+        return self.usable_mark[gpu_id]
                 
                 
 # 示例使用
