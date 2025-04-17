@@ -70,9 +70,9 @@ class CommandLineInterface(cmd.Cmd):
         except ValueError:
             print("错误: 最大进程数必须是数字")
 
-def run_cli(func):
+def run_cli(func, todo_dir=None):
     """启动命令行界面"""
-    program = ProgramManager(func)
+    program = ProgramManager(func, todo_dir)
     cli = CommandLineInterface(program)
     try:
         cli.cmdloop()

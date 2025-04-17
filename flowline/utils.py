@@ -2,8 +2,9 @@ import signal
 import sys
 import psutil
 import subprocess
+import os
 
-        
+
 class FunctionCall:
     def __init__(self, func, *args, **kwargs):
         self.func = func
@@ -18,18 +19,28 @@ class FunctionCall:
         return f"{self.func.__name__}({self.args}, {self.kwargs})"
         
 class PopenProcess:
-    def __init__(self, result_queue):
+    def __init__(self, result_queue, process_id):
+        self.process_id = process_id
         self.result_queue = result_queue
         self.popen_process = None
 
     def fcb(self, cmd):
         signal.signal(signal.SIGTERM, self._handle_terminate)
-        self.popen_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        self.popen_process.wait()
-        stdout, stderr = self.popen_process.communicate()
+        
+        stdout_file = f"log/{self.process_id}.out"
+        stderr_file = f"log/{self.process_id}.err"
+        if not os.path.exists("log"):
+            os.makedirs("log")
+        
+        with open(stdout_file, 'w', encoding='utf-8') as stdout_f, \
+             open(stderr_file, 'w', encoding='utf-8') as stderr_f:
+            self.popen_process = subprocess.Popen(cmd, stdout=stdout_f, stderr=stderr_f, shell=True)
+            self.popen_process.wait()
+        
+        _, stderr = self.popen_process.communicate()
         returncode = self.popen_process.returncode
         if returncode == 0:
-            self.result_queue.put((True, stdout))
+            self.result_queue.put((True, None))
         else:
             self.result_queue.put((False, stderr))
 

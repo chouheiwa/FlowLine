@@ -52,7 +52,7 @@ class Process:
     def run(self):
         try:
             logger.info(f"[ID {self.process_id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Run (fc:{self.fc})")
-            self._process = multiprocessing.Process(target=PopenProcess(self.result_queue).fcb, args=(self.fc(),))
+            self._process = multiprocessing.Process(target=PopenProcess(self.result_queue, self.process_id).fcb, args=(self.fc(),))
             self._process.daemon = True
             self._process.start()
             self.change_status(ProcessStatus.RUNNING)

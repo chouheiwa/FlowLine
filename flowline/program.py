@@ -6,7 +6,7 @@ import sys
 import os
 
 from .gpu import GPU_Manager
-from .process import ProcessManager, Process
+from .process import ProcessManager, ProcessStatus
 from .todo import TodoManager
 from .log import Log
 from .utils import FunctionCall
@@ -14,11 +14,11 @@ from .utils import FunctionCall
 logger = Log(__name__)
 
 class ProgramManager:
-    def __init__(self, func):
+    def __init__(self, func, todo_dir=None):
         self._lock = threading.Lock()
         self.gpu_manager = GPU_Manager(8, [4, 5], self.on_gpu_flash)
         self.process_manager = ProcessManager(self.on_process_changed)
-        self.todo_manager = TodoManager()
+        self.todo_manager = TodoManager(todo_dir)
         
         self.if_run = False
         self._main_thread = None 
@@ -37,33 +37,34 @@ class ProgramManager:
     def on_process_changed(self, todo_id, process_id, gpu_id, pid, status):
         logger.info(f"ProgramManager: process {process_id} status changed: {status}")
         self.gpu_manager.update_user_process_num(gpu_id, pid, status)
-        if status == "completed":
+        if status == ProcessStatus.COMPLETED:
             self.todo_manager.update_todo_ids(todo_id)
-        elif status in ["failed", "killed"]:
+        elif status in [ProcessStatus.FAILED, ProcessStatus.KILLED]:
             self.todo_manager.put_todo_ids(todo_id)
+        elif status == ProcessStatus.RUNNING:
+            pass
         else:
             logger.warning(f"Unknown process status: {status}")
             
     def on_gpu_flash(self, gpu_id, info):
-        logger.info(f"ProgramManager: GPU {gpu_id} status changed: {info}")
+        # logger.info(f"ProgramManager: GPU {gpu_id} status changed: {info}")
+        pass
             
     ##################### main loop #####################
             
     @synchronized
     def new_process(self):
         """create new process to handle task"""
-        todo_id, dict = self.todo_manager.get_next_todo()
-        if todo_id is None:
-            logger.info("no task to handle")
+        if not self.process_manager.have_space():
+            logger.info(f"over max processes")
             return
         gpu_id = self.gpu_manager.choose_gpu()
         if gpu_id is None:
-            self.todo_manager.put_todo_ids(todo_id)
-            logger.info(f"no available GPU, task {todo_id} put back to queue")
+            logger.info(f"no available GPU")
             return
-        if not self.process_manager.have_space():
-            self.todo_manager.put_todo_ids(todo_id)
-            logger.info(f"over max processes, task {todo_id} put back to queue")
+        todo_id, dict = self.todo_manager.get_next_todo()
+        if todo_id is None:
+            logger.info("no task to handle")
             return
         if self.process_manager.add_process(FunctionCall(self.func, dict, gpu_id), todo_id, gpu_id) is None:
             self.todo_manager.put_todo_ids(todo_id)
