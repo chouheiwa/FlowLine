@@ -3,7 +3,7 @@ import time
 
 if __name__ == "__main__":
     def func(dict, gpu_id):
-        while True:
-            print(dict, gpu_id)
-            time.sleep(1)
+        return "CUDA_VISIBLE_DEVICES="+str(gpu_id)+" python test.py "+ " ".join([f"--{k}={v}" for k, v in dict.items()])
+    
+    
     run_cli(func)

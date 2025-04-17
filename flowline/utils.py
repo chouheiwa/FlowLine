@@ -1,3 +1,9 @@
+import signal
+import sys
+import psutil
+import subprocess
+
+        
 class FunctionCall:
     def __init__(self, func, *args, **kwargs):
         self.func = func
@@ -8,81 +14,61 @@ class FunctionCall:
         return self.func(*self.args, **self.kwargs)
     
     def __str__(self):
+        #  return self.func(*self.args, **self.kwargs)
         return f"{self.func.__name__}({self.args}, {self.kwargs})"
-    
-class FunctionCallBack:
-    def __init__(self, fc: FunctionCall, success_callback=None, error_callback=None):
-        self.fc = fc
-        self.success_callback = success_callback
-        self.error_callback = error_callback
         
-    def success(self, result):
-        if self.success_callback:
-            self.success_callback(result)
-            
-    def error(self, error):
-        if self.error_callback:
-            self.error_callback(error)
-            
-    def __call__(self):
-        try:
-            result = self.fc()
-            self.success(result)
-        except Exception as e:
-            self.error(e)
+class PopenProcess:
+    def __init__(self, result_queue):
+        self.result_queue = result_queue
+        self.popen_process = None
+
+    def fcb(self, cmd):
+        signal.signal(signal.SIGTERM, self._handle_terminate)
+        self.popen_process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        self.popen_process.wait()
+        stdout, stderr = self.popen_process.communicate()
+        returncode = self.popen_process.returncode
+        if returncode == 0:
+            self.result_queue.put((True, stdout))
+        else:
+            self.result_queue.put((False, stderr))
+
+    def _handle_terminate(self, signum, frame):
+        # print("process terminated", signum)
+        proc_pid = self.popen_process.pid
+        process = psutil.Process(proc_pid)
+        for proc in process.children(recursive=True):
+            proc.kill()
+        process.kill()
         
 if __name__ == "__main__":
-    import time
-    import threading
     import multiprocessing
-    import torch
-    import ctypes
-
-
-    mark = True
+    import time
     
-    def test_func(k):
-        tensor = torch.randn(1000, 1000).to("cuda:" + str(k))
-
-        i = 0
-        while mark:
-            print(i)
-            i += 1
-            if i > 10:
-                raise Exception("test exception")
-            time.sleep(1)
-            
-    def success_callback(result):
-        print(f"进程成功完成，结果为: {result}")
-
-    def error_callback(error):
-        print(f"进程出错: {error}")
-            
-    fc1 = FunctionCall(test_func, 4)
-    fc2 = FunctionCall(test_func, 5)
+    def success():
+        print("success")
+        
+    def error(error):
+        print(error)
+        
+    cmd_a = "CUDA_VISIBLE_DEVICES=4 python test.py --test a"
+    cmd_b = "CUDA_VISIBLE_DEVICES=5 python test.py --test b"
     
-    fcb1 = FunctionCallBack(fc1, success_callback=success_callback, error_callback=error_callback)  
-    fcb2 = FunctionCallBack(fc2, success_callback=success_callback, error_callback=error_callback)
+    proc_a = multiprocessing.Process(target=PopenProcess(success_callback=success, error_callback=error).fcb, args=(cmd_a,))
+    proc_b = multiprocessing.Process(target=PopenProcess(success_callback=success, error_callback=error).fcb, args=(cmd_b,))
     
-    p1 = multiprocessing.Process(target=fcb1)
-    p2 = multiprocessing.Process(target=fcb2)
+    proc_a.start()
+    proc_b.start()
     
-    p1.start()
-    time.sleep(2)
-    p2.start()
-    print(p1.pid)
-    print(p2.pid)
-    
-    time.sleep(2)
-    p1.terminate()
-    time.sleep(2)
-    print(p1.is_alive())
-    print(p2.is_alive())
+    time.sleep(3)
     
     while True:
-        print(time.time())
         time.sleep(1)
-    
-    
-    
-    
+        if proc_a.is_alive():
+            print("proc_a is alive")
+        else:
+            print("proc_a is dead")
+        if proc_b.is_alive():
+            print("proc_b is alive")
+        else:
+            print("proc_b is dead")

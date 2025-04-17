@@ -1,53 +1,87 @@
 import multiprocessing
 import time
+import threading
 
 from .log import Log
-from .utils import FunctionCall, FunctionCallBack
+from .utils import FunctionCall, PopenProcess
 
 logger = Log(__name__)
 
 class ProcessStatus:
-    PENDING = "pending"
-    RUNNING = "running"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    KILLING = "killing"
-    KILLED = "killed"
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    KILLING = "KILLING"
+    KILLED = "KILLED"
+    
+    def __str__(self):
+        return self.name
     
 class Process:
     def __init__(self, process_id: int, fc: FunctionCall, todo_id: int, gpu_id: int, on_status_changed=None):
+        self.manager = multiprocessing.Manager()
+        self.shared_dict = self.manager.dict()
+        self.shared_dict["status"] = ProcessStatus.PENDING
+        self.on_status_changed = on_status_changed
+        
         self.process_id = process_id
-        self.fc = fc
-        self.fcb = FunctionCallBack(fc, success_callback=self.on_completed, error_callback=self.on_failed)
+        self.fc = fc 
         self.todo_id = todo_id
         self.gpu_id = gpu_id
         self.start_time = time.time()
-        self.on_status_changed = on_status_changed
-        self.status = ProcessStatus.PENDING
+        
         self.pid = None
-        self._process = self.run()
+        self._process = None
+        self.result_queue = multiprocessing.Queue()
+        self.run()
         self.pid = self._process.pid
         
     def change_status(self, status: ProcessStatus):
-        self.status = status
-        if self.on_status_changed:
-            self.on_status_changed(self)
+        try:
+            logger.info(f"[ID {self.process_id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Change status from {self.shared_dict['status']} to {status}")
+            self.shared_dict["status"] = status
+            if self.on_status_changed:
+                self.on_status_changed(self)
+        except Exception as e:
+            logger.error(f"Process change_status: failed: {e}")
+            
+    def get_status(self):
+        return self.shared_dict["status"]
         
     def run(self):
-        logger.info(f"[ID {self.process_id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Run (fcb:{self.fcb})")
-        proc = multiprocessing.Process(target=self.fcb)
-        proc.daemon = True
-        proc.start()
-        self.change_status(ProcessStatus.RUNNING)
-        return proc
+        try:
+            logger.info(f"[ID {self.process_id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Run (fc:{self.fc})")
+            self._process = multiprocessing.Process(target=PopenProcess(self.result_queue).fcb, args=(self.fc(),))
+            self._process.daemon = True
+            self._process.start()
+            self.change_status(ProcessStatus.RUNNING)
+            threading.Thread(target=self._wait_result, daemon=True).start()
+        except Exception as e:
+            logger.error(f"Process run: failed: {e}")
+            raise e
+    
+    def _wait_result(self):
+        try:
+            self._process.join()
+            success, result = self.result_queue.get()
+            if success:
+                self.on_completed()
+            else:
+                self.on_failed(result)
+        except Exception as e:
+            logger.error(f"Process _wait_result: failed: {e}")
             
     def kill(self):
-        self._process.terminate()
-        self.change_status(ProcessStatus.KILLING)
-        self._process.join()
-        self.change_status(ProcessStatus.KILLED)
+        if self.shared_dict["status"] in [ProcessStatus.RUNNING]:
+            self._process.terminate()
+            self.change_status(ProcessStatus.KILLING)
+            self._process.join()
+            self.change_status(ProcessStatus.KILLED)
+        else:
+            logger.warning(f"[ID {self.process_id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Process is not running")
         
-    def on_completed(self, result):
+    def on_completed(self, result = None):
         logger.info(f"[ID {self.process_id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Completed (result:{result})")
         self.change_status(ProcessStatus.COMPLETED)
         
@@ -68,7 +102,7 @@ class ProcessManager:
         while True:
             yield current_id
             current_id += 1
-        
+            
     def set_max_processes(self, max_processes: int):
         self.max_processes = max_processes
         
@@ -77,6 +111,13 @@ class ProcessManager:
         
     def have_space(self) -> bool:
         return len(self.processes) < self.max_processes
+            
+    def on_process_state(self, process):
+        logger.info(f"ProcessManager on_process_state: Process {process.process_id} status: {process.shared_dict['status']}")
+        if process.shared_dict['status'] in [ProcessStatus.COMPLETED, ProcessStatus.FAILED, ProcessStatus.KILLED]: 
+            self.processes.remove(process)
+        if self.on_process_changed:
+            self.on_process_changed(process.todo_id, process.process_id, process.gpu_id, process.pid, process.get_status())
         
     def add_process(self, fc: FunctionCall, todo_id: int, gpu_id: int):
         try:
@@ -85,10 +126,10 @@ class ProcessManager:
                 return None
             process = Process(next(self.process_id_gen), fc, todo_id, gpu_id, self.on_process_state)
             self.processes.append(process)
-            return process
+            return True
         except Exception as e:
-            logger.error(f"ProcessManager: Failed to add process: {e}")
-            return None
+            logger.error(f"ProcessManager add_process: Failed to add process: {e}")
+            return False
             
     def kill_process_by_gpu(self, gpu_id: int):
         processes_to_kill = [p for p in self.processes if p.gpu_id == gpu_id]
@@ -112,13 +153,6 @@ class ProcessManager:
         else:
             logger.warning(f"ProcessManager: Process ID {process_id} not found")
             return False
-    
-    def on_process_state(self, process):
-        if process.status in [ProcessStatus.COMPLETED, ProcessStatus.FAILED, ProcessStatus.KILLED]: 
-            if process in self.processes:
-                self.processes.remove(process)
-        if self.on_process_changed:
-            self.on_process_changed(process.todo_id, process.process_id, process.gpu_id, process.pid, process.status)
             
     def kill_all_processes(self):
         processes_to_kill = list(self.processes)
@@ -128,37 +162,26 @@ class ProcessManager:
         return len(processes_to_kill)
 
 if __name__ == "__main__":
-    import torch
-    
-    # 简单测试
     def on_completed(todo_id, process_id, gpu_id, pid, status):
         print(f"on_completed: Process {process_id} status: {status}")
     
-    def test_func(k):
-        tensor = torch.randn(1000, 1000).to("cuda:" + str(k))
-        i = 0
-        while i<10:
-            print(i)
-            i += 1
-            if i > 10:
-                raise Exception("test exception")
-            time.sleep(1)
-        return "test success"
+    def func(k, v):
+        return f"CUDA_VISIBLE_DEVICES={k} python test.py --test {v}"
             
-    fc1 = FunctionCall(test_func, 4)
-    fc2 = FunctionCall(test_func, 5)
+    fc1 = FunctionCall(func, 4, "a")
+    # fc2 = FunctionCall(func, 5, "b")
     
     process_manager = ProcessManager(on_completed)
     
     process_manager.add_process(fc1, 1, 4)
-    process_manager.add_process(fc2, 2, 4)
+    # process_manager.add_process(fc2, 2, 4)
     
-    time.sleep(5)
+    # time.sleep(5)
     
-    process_manager.kill_process_by_id(0)
+    # process_manager.kill_process_by_id(0)
     
     # 等待所有进程完成
-    time.sleep(15)
-    print("所有活动进程状态:", [(p.process_id, p.status) for p in process_manager.processes])
+    time.sleep(5)
+    print("所有活动进程状态:", [(p.process_id, p.get_status()) for p in process_manager.processes])
     
     # python -m flowline.process

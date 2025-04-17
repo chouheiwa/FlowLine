@@ -140,7 +140,7 @@ class ProgramManager:
         print("-" * 130)
         for p in active_processes:
             func_str = str(p.fc)
-            print(f"{p.process_id:<8} {p.pid:<8} {p.todo_id:<8} {p.gpu_id:<8} {p.status:<8} {func_str[:80]}")
+            print(f"{p.process_id:<8} {p.pid:<8} {p.todo_id:<8} {p.gpu_id:<8} {p.get_status():<8} {func_str[:80]}")
             while len(func_str) > 80:
                 print(" "*45, end="")
                 func_str = func_str[80:]
