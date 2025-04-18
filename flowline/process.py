@@ -77,9 +77,15 @@ class Process:
             self._process.terminate()
             self.change_status(ProcessStatus.KILLING)
             self._process.join()
-            self.change_status(ProcessStatus.KILLED)
+            if self._process.is_alive():
+                logger.warning(f"[ID {self.process_id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Process is can't be killed")
+                return False
+            else:
+                self.change_status(ProcessStatus.KILLED)
+                return True
         else:
             logger.warning(f"[ID {self.process_id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Process is not running")
+            return False
         
     def on_completed(self, result = None):
         logger.info(f"[ID {self.process_id}] [TODO {self.todo_id}] [GPU {self.gpu_id}] Completed (result:{result})")
@@ -91,11 +97,18 @@ class Process:
             
 class ProcessManager:
     def __init__(self, on_process_changed=None):
+        self._lock = threading.Lock()
         self.process_id_gen = self.id_generator()
         self.on_process_changed = on_process_changed
         
         self.max_processes = 4
         self.processes = []
+        
+    def synchronized(func):
+        def wrapper(self, *args, **kwargs):
+            with self._lock:
+                return func(self, *args, **kwargs)
+        return wrapper
 
     def id_generator(self):
         current_id = 0
@@ -115,10 +128,15 @@ class ProcessManager:
     def on_process_state(self, process):
         logger.info(f"ProcessManager on_process_state: Process {process.process_id} status: {process.shared_dict['status']}")
         if process.shared_dict['status'] in [ProcessStatus.COMPLETED, ProcessStatus.FAILED, ProcessStatus.KILLED]: 
-            self.processes.remove(process)
+            self.remove_process(process)
         if self.on_process_changed:
             self.on_process_changed(process.todo_id, process.process_id, process.gpu_id, process.pid, process.get_status())
         
+    @synchronized
+    def remove_process(self, process):
+        self.processes.remove(process)
+        
+    @synchronized
     def add_process(self, fc: FunctionCall, todo_id: int, gpu_id: int):
         try:
             if not self.have_space():
@@ -148,8 +166,7 @@ class ProcessManager:
                 break
         if target_process:
             logger.info(f"ProcessManager: Terminate process ID {process_id}")
-            target_process.kill()
-            return True
+            return target_process.kill()
         else:
             logger.warning(f"ProcessManager: Process ID {process_id} not found")
             return False

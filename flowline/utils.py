@@ -4,6 +4,9 @@ import psutil
 import subprocess
 import os
 
+from .log import Log
+
+logger = Log(__name__)
 
 class FunctionCall:
     def __init__(self, func, *args, **kwargs):
@@ -25,24 +28,29 @@ class PopenProcess:
         self.popen_process = None
 
     def fcb(self, cmd):
-        signal.signal(signal.SIGTERM, self._handle_terminate)
-        
-        stdout_file = f"log/{self.process_id}.out"
-        stderr_file = f"log/{self.process_id}.err"
-        if not os.path.exists("log"):
-            os.makedirs("log")
-        
-        with open(stdout_file, 'w', encoding='utf-8') as stdout_f, \
-             open(stderr_file, 'w', encoding='utf-8') as stderr_f:
-            self.popen_process = subprocess.Popen(cmd, stdout=stdout_f, stderr=stderr_f, shell=True)
-            self.popen_process.wait()
-        
-        _, stderr = self.popen_process.communicate()
-        returncode = self.popen_process.returncode
-        if returncode == 0:
-            self.result_queue.put((True, None))
-        else:
-            self.result_queue.put((False, stderr))
+        try:
+            signal.signal(signal.SIGTERM, self._handle_terminate)
+            
+            stdout_file = f"log/{self.process_id}.out"
+            stderr_file = f"log/{self.process_id}.err"
+            if not os.path.exists("log"):
+                os.makedirs("log")
+            
+            with open(stdout_file, 'w', encoding='utf-8') as stdout_f, \
+                open(stderr_file, 'w', encoding='utf-8') as stderr_f:
+                self.popen_process = subprocess.Popen(cmd, stdout=stdout_f, stderr=stderr_f, shell=True)
+                self.popen_process.wait()
+            
+            _, stderr = self.popen_process.communicate()
+            returncode = self.popen_process.returncode
+            logger.info(f"Process {self.process_id} finished with return code {returncode}")
+            if returncode == 0:
+                self.result_queue.put((True, None))
+            else:
+                self.result_queue.put((False, stderr))
+        except Exception as e:
+            logger.error(f"Process {self.process_id} failed: {e}")
+            self.result_queue.put((False, str(e)))
 
     def _handle_terminate(self, signum, frame):
         # print("process terminated", signum)

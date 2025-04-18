@@ -116,12 +116,14 @@ def read_configs(excel_path):
     """
     Read the configuration parameters from the Excel file.
     """
+    logger.info(f"读取配置文件: {excel_path}")
     df = pd.read_excel(excel_path)
     return df
 
 
 class TodoManager:
     def __init__(self, excel_path=todo_excel_path):
+        excel_path = excel_path if excel_path else todo_excel_path
         self._lock = threading.Lock()
         self.excel_path = excel_path
         self.df = read_configs(excel_path)

@@ -7,3 +7,5 @@ if __name__ == "__main__":
     
     
     run_cli(func, todo_dir="todo.xlsx")
+    
+# pkill -9 python
