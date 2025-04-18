@@ -35,7 +35,7 @@ class ProgramManager:
     ##################### callback #####################
     
     def on_process_changed(self, todo_id, process_id, gpu_id, pid, status):
-        logger.info(f"ProgramManager: process {process_id} status changed: {status}")
+        # logger.info(f"ProgramManager: process {process_id} status changed: {status}")
         self.gpu_manager.update_user_process_num(gpu_id, pid, status)
         if status == ProcessStatus.COMPLETED:
             self.todo_manager.update_todo_ids(todo_id)
@@ -127,43 +127,15 @@ class ProgramManager:
     
     def set_max_processes(self, max_processes: int):
         self.process_manager.set_max_processes(max_processes)
+        
+    def get_process_dict(self):
+        return self.process_manager.get_process_dict(), self.process_manager.get_max_processes()
+        
+    def get_gpu_dict(self):
+        return self.gpu_manager.get_gpu_dict()
     
-    def list_processes(self):
-        """list all running processes"""
-        active_processes = self.process_manager.processes
-        if not active_processes:
-            print("no running processes")
-            return
-            
-        print("\nrunning processes:")
-        print("-" * 130)
-        print(f"{'ProcID':<8} {'PID':<8} {'TodoID':<8} {'GPUID':<8} {'Status':<8} {'Func':<100}")
-        print("-" * 130)
-        for p in active_processes:
-            func_str = str(p.fc)
-            print(f"{p.process_id:<8} {p.pid:<8} {p.todo_id:<8} {p.gpu_id:<8} {p.get_status():<8} {func_str[:80]}")
-            while len(func_str) > 80:
-                print(" "*45, end="")
-                func_str = func_str[80:]
-                print(func_str[:80])
-            
-        print("-" * 130)
-        print(f"max processes: {self.process_manager.get_max_processes()}")
-    
-    def list_gpus(self):
-        """list all GPU status"""
-        print("\nGPU status:")
-        print("-" * 130)
-        print(f"{'ID':<5} {'status':<12} {'utilization(%)':<15} {'free/total(MB)':<18} {'use/all':<10} {'temp':<8} {'power/max(W)':<20}")
-        print("-" * 130)
-        for i, gpu in enumerate(self.gpu_manager.all_gpu):
-            info = gpu.info
-            status = "available" if self.gpu_manager.usable_mark[i] else "disabled"
-            memory_str = f"{info.free_memory:.0f}/{info.total_memory:.0f}"
-            power_str = f"{info.power:.0f}/{info.max_power:.0f}"
-            process_str = f"{info.user_process_num}/{info.all_process_num}"
-            print(f"{gpu.gpu_id:<5} {status:<12} {info.utilization:<15.2f} {memory_str:<18} {process_str:<10} {info.temperature:<8} {power_str:<20}")
-        print("-" * 130)
+    def get_todo_dict(self):
+        return self.todo_manager.get_todo_dict()
 
 if __name__ == "__main__":
     def func(dict, gpu_id):

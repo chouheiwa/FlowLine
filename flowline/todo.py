@@ -148,11 +148,14 @@ class TodoManager:
     
     # -------------------------------
     
+    def get_todo_dict(self):
+        return self.get_todo_configs().to_dict(orient='records')
+    
     @synchronized
-    def get_next_todo(self) -> tuple[int, dict]:  
-        id = self.todo_ids.get()
+    def get_next_todo(self) -> tuple[int, dict]:
         if self.todo_ids.empty():
             return None, None
+        id = self.todo_ids.get()
         row = self.df.iloc[id]
         config_dict = row.drop('run_num').to_dict()
         logger.info(f"获取任务 {id} 配置: {config_dict}")
