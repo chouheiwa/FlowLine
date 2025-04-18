@@ -27,3 +27,5 @@ if __name__ == "__main__":
     while True:
         print(time.time(),args.test)
         time.sleep(1)
+    
+    # raise Exception("test")
