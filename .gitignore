@@ -1,15 +1,15 @@
 # IDE
-*.pyc
-*.pyo
-*.pyd
-*.pyw
-*.pyz
-*.pywz
 */__pycache__
+__pycache__
+.vscode
 
 # todo
 */todo.xlsx
 */todo.csv
+todo.xlsx
 
 # log
-*/log/*
+*/log/
+log/
+
+

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowLine - 日志查看器</title>
+    <link rel="stylesheet" href="../css/type.css">
+    <link rel="stylesheet" href="logs.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">FlowLine</div>
+        <div class="nav-items">
+            <div class="nav-item"><a href="/gpu">GPU</a></div>
+            <div class="nav-item"><a href="/tasks">任务</a></div>
+            <div class="nav-item active"><a href="/logs">日志</a></div>
+            <div class="nav-item"><a href="/settings">设置</a></div>
+        </div>
+        <div class="user-info">
+            <span>Admin</span>
+        </div>
+    </nav>
+    
+    <div class="toast-container">
+        <div class="toast" id="toast">
+            <div class="toast-content">
+                <span class="toast-message"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="section-header">
+                <h2>日志文件</h2>
+                <div class="header-actions">
+                    <button id="refreshBtn">刷新</button>
+                </div>
+            </div>
+            <div id="logFiles" class="log-files">
+                <!-- 日志文件列表将通过JavaScript渲染 -->
+            </div>
+            <div class="section-header">
+                <h2>日志筛选</h2>
+            </div>
+            <div class="log-filter-form">
+                <div class="form-group">
+                    <label for="searchTerm">搜索关键词</label>
+                    <input type="text" id="searchTerm" placeholder="输入关键词搜索">
+                </div>
+                <div class="form-group">
+                    <label for="logLevel">日志级别</label>
+                    <select id="logLevel">
+                        <option value="all">全部级别</option>
+                        <option value="info">INFO</option>
+                        <option value="warning">WARNING</option>
+                        <option value="error">ERROR</option>
+                        <option value="debug">DEBUG</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="maxLines">最大行数</label>
+                    <input type="number" id="maxLines" value="1000" min="10" max="5000">
+                </div>
+                <div class="form-actions">
+                    <button id="applyFilterBtn">应用筛选</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="logs-header">
+                <div class="section-header">
+                    <h2 id="currentLogTitle">选择日志文件</h2>
+                    <div class="header-actions">
+                        <button id="downloadBtn" disabled>下载</button>
+                        <button id="clearLogBtn" disabled>清空日志</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="logs-container">
+                <div id="logContent" class="log-content">
+                    <div class="empty-log-state">请从左侧选择一个日志文件</div>
+                </div>
+                <div class="log-auto-scroll">
+                    <label>
+                        <input type="checkbox" id="autoScrollCheckbox" checked>
+                        自动滚动至底部
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="logs.js"></script>
+</body>
+</html> 

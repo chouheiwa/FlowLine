@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowLine - 任务管理系统</title>
+    <link rel="stylesheet" href="../css/type.css">
+    <link rel="stylesheet" href="tasks.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/"><div class="logo">FlowLine</div></a>
+        <div class="nav-items">
+            <a href="/gpu"><div class="nav-item">GPU</div></a>
+            <a href="/tasks"><div class="nav-item active">任务</div></a>
+            <a href="/logs"><div class="nav-item">日志</div></a>
+            <a href="/settings"><div class="nav-item">设置</div></a>
+        </div>
+        <div class="user-info">
+            <span>Admin</span>
+        </div>
+    </nav>
+    
+    <div class="toast-container">
+        <div class="toast" id="toast">
+            <div class="toast-content">
+                <span class="toast-message"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="section-header">
+                <h2>任务分类</h2>
+                <div class="header-actions">
+                    <button id="refreshBtn">刷新</button>
+                </div>
+            </div>
+            <div id="taskCategories" class="task-categories">
+                <div class="category-card selected" data-status="all">
+                    <div class="category-name">全部任务</div>
+                    <div class="category-count" id="all-count">0</div>
+                </div>
+                <div class="category-card" data-status="running">
+                    <div class="category-name">运行中</div>
+                    <div class="task-status running"></div>
+                    <div class="category-count" id="running-count">0</div>
+                </div>
+                <div class="category-card" data-status="pending">
+                    <div class="category-name">等待中</div>
+                    <div class="task-status pending"></div>
+                    <div class="category-count" id="pending-count">0</div>
+                </div>
+                <div class="category-card" data-status="completed">
+                    <div class="category-name">已完成</div>
+                    <div class="task-status completed"></div>
+                    <div class="category-count" id="completed-count">0</div>
+                </div>
+                <div class="category-card" data-status="failed">
+                    <div class="category-name">失败</div>
+                    <div class="task-status failed"></div>
+                    <div class="category-count" id="failed-count">0</div>
+                </div>
+                <div class="category-card" data-status="killed">
+                    <div class="category-name">已终止</div>
+                    <div class="task-status killed"></div>
+                    <div class="category-count" id="killed-count">0</div>
+                </div>
+            </div>
+            <div class="section-header">
+                <h2>创建任务</h2>
+            </div>
+            <div class="create-task-form">
+                <div class="form-group">
+                    <label for="taskName">任务名称</label>
+                    <input type="text" id="taskName" placeholder="输入任务名称">
+                </div>
+                <div class="form-group">
+                    <label for="taskCommand">命令</label>
+                    <textarea id="taskCommand" placeholder="输入任务命令"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="taskGpu">选择GPU</label>
+                    <select id="taskGpu">
+                        <!-- GPU选项将通过JavaScript渲染 -->
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button id="createTaskBtn">创建任务</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="tasks-header">
+                <div class="section-header">
+                    <h2 id="tasksListTitle">所有任务</h2>
+                    <div class="header-actions">
+                        <button id="clearBtn">清空完成/失败</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tasks-container">
+                <div id="tasksList" class="tasks-list">
+                    <!-- 任务列表将通过JavaScript渲染 -->
+                </div>
+            </div>
+            
+            <div class="task-detail-panel" id="taskDetailPanel">
+                <div class="section-header">
+                    <h2 id="taskDetailTitle">任务详情</h2>
+                    <div class="header-actions">
+                        <button id="closeDetailBtn">关闭</button>
+                    </div>
+                </div>
+                <div class="task-detail-content" id="taskDetailContent">
+                    <!-- 任务详情将通过JavaScript渲染 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="tasks.js"></script>
+</body>
+</html> 

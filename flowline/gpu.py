@@ -18,7 +18,19 @@ class GPU_info:
         self.power = power
         self.max_power = max_power
         
-
+    def to_dict(self):
+        return {
+            "free_memory": self.free_memory,
+            "total_memory": self.total_memory,
+            "utilization": self.utilization,
+            "user_process_num": self.user_process_num,
+            "all_process_num": self.all_process_num,
+            "name": self.name,
+            "temperature": self.temperature,
+            "power": self.power,
+            "max_power": self.max_power
+        }
+        
 class GPU:
     def __init__(self, gpu_id, on_flash=None):
         self.gpu_id = gpu_id
@@ -65,6 +77,9 @@ class GPU:
         thread.daemon = True
         thread.start()
         return thread
+    
+    def get_dict(self):
+        return self.info.to_dict()
     
 class GPU_Manager:
     def __init__(self, all_gpu_num, use_gpu_id: list, on_flash=None):
@@ -125,8 +140,19 @@ class GPU_Manager:
 
     @synchronized
     def switch_gpu(self, gpu_id):
+        if gpu_id < 0 or gpu_id >= len(self.all_gpu):
+            logger.error(f"GPU_Manager switch_gpu: Invalid GPU ID: {gpu_id}")
+            return False, None
         self.usable_mark[gpu_id] = not self.usable_mark[gpu_id]
-        return self.usable_mark[gpu_id]
+        return True, self.usable_mark[gpu_id]
+    
+    def get_gpu_dict(self):
+        gpu_dict = {}
+        for gpu in self.all_gpu:
+            dict = gpu.get_dict()
+            dict['status'] = "available" if self.usable_mark[gpu.gpu_id] else "disabled"
+            gpu_dict[gpu.gpu_id] = dict
+        return gpu_dict
                 
                 
 # 示例使用

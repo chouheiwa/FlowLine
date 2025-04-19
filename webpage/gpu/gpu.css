@@ -1,108 +1,3 @@
-/* 基础样式 */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-}
-
-body {
-    background-color: #f5f7fa;
-    color: #333;
-    line-height: 1.6;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-}
-
-/* 顶部导航栏 */
-.navbar {
-    background-color: #1e3a8a;
-    color: white;
-    padding: 0 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 60px;
-}
-
-.logo {
-    font-size: 1.5rem;
-    font-weight: 600;
-}
-
-.nav-items {
-    display: flex;
-}
-
-.nav-item {
-    padding: 0 15px;
-    cursor: pointer;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    transition: background-color 0.2s;
-}
-
-.nav-item:hover {
-    background-color: #2563eb;
-}
-
-.nav-item.active {
-    background-color: #2563eb;
-    font-weight: 500;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-}
-
-/* 主内容区 */
-.container {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-}
-
-/* 侧边栏 */
-.sidebar {
-    width: 300px;
-    background-color: white;
-    border-right: 1px solid #e5e7eb;
-    display: flex;
-    flex-direction: column;
-}
-
-.section-header {
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.section-header h2 {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #1e3a8a;
-}
-
-.header-actions button {
-    background-color: #2563eb;
-    color: white;
-    border: none;
-    padding: 6px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: background-color 0.2s;
-}
-
-.header-actions button:hover {
-    background-color: #1d4ed8;
-}
-
 /* GPU列表 */
 .gpu-list {
     padding: 10px;
@@ -159,6 +54,25 @@ body {
 .gpu-status.busy {
     background-color: #fed7aa;
     color: #9a3412;
+}
+
+.gpu-switch {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    float: right;
+    font-size: 0.9rem;
+    display: none;
+}
+
+.gpu-card:hover .gpu-switch {
+    display: block;
+}
+
+.gpu-switch:hover {
+    background-color: #1d4ed8;
 }
 
 .gpu-stats {
@@ -300,7 +214,10 @@ body {
 
 .task-todo-id {
     color: #6b7280;
-    font-size: 0.9rem;
+    font-size: 0.6rem;
+    background-color: #d0d0d0;
+    border-radius: 40px;
+    padding: 1px 6px;
 }
 
 .task-command {
@@ -314,24 +231,24 @@ body {
 }
 
 .task-actions button {
-    background-color: #f3f4f6;
+    background-color: #2563eb;
     border: none;
     padding: 6px 10px;
-    border-radius: 4px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .task-actions button:hover {
-    background-color: #e5e7eb;
+    background-color: #ffa5a5;
 }
 
 .task-actions button.kill {
-    color: #b91c1c;
+    color: #ffffff;
 }
 
 .task-actions button.kill:hover {
-    background-color: #fee2e2;
+    color: #ff0000;
 }
 
 /* 进程表格 */
@@ -398,13 +315,14 @@ tbody tr:hover {
 
 /* 设置各列的宽度 */
 th:nth-child(1), td:nth-child(1) { width: 80px; }
-th:nth-child(2), td:nth-child(2) { width: 110px; }
-th:nth-child(3), td:nth-child(3) { width: 90px; }
-th:nth-child(4), td:nth-child(4) { width: 190px; }
-th:nth-child(5), td:nth-child(5) { width: 120px; }
-th:nth-child(6), td:nth-child(6) { width: 190px; }
-th:nth-child(7), td:nth-child(7) { width: 100px; }
-th:nth-child(8), td:nth-child(8) { width: 400px; }
+th:nth-child(2), td:nth-child(2) { width: 90px; }
+th:nth-child(3), td:nth-child(3) { width: 100px; }
+th:nth-child(4), td:nth-child(4) { width: 80px; }
+th:nth-child(5), td:nth-child(5) { width: 80px; }
+th:nth-child(6), td:nth-child(6) { width: 80px; }
+th:nth-child(7), td:nth-child(7) { width: 190px; }
+th:nth-child(8), td:nth-child(8) { width: 100px; }
+th:nth-child(9), td:nth-child(9) { width: 500px; }
 
 /* 命令列可以在必要时允许文本换行 */
 .command {

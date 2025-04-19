@@ -1,10 +1,11 @@
 import cmd
 import sys
+import shutil
 
 from .program import ProgramManager
 
 class CommandLineInterface(cmd.Cmd):
-    intro = '欢迎使用任务处理系统. 输入 help 或 ? 查看帮助.\n'
+    intro = 'welcome to use task processing system. input help or ? to view help.\n'
     prompt = '> '
     
     def __init__(self, program_manager):
@@ -12,72 +13,118 @@ class CommandLineInterface(cmd.Cmd):
         self.program_manager = program_manager
         
     def do_run(self, arg):
-        """切换处理循环状态: run"""
+        """switch running status: run"""
         is_run = self.program_manager.switch_run()
-        print(f"处理循环现在{'正在运行' if is_run else '已停止'}")
+        print(f"processing loop {'running' if is_run else 'stopped'}")
         
     def do_gpu(self, arg):
-        """切换GPU状态: gpu <id>"""
+        """switch GPU status: gpu <id>"""
         try:
             gpu_id = int(arg.strip())
-            self.program_manager.switch_gpu(gpu_id)
+            if_success, is_on = self.program_manager.switch_gpu(gpu_id)
+            if if_success:
+                print(f"GPU {gpu_id} switched to {'available' if is_on else 'unavailable'}")
+            else:
+                print(f"error: invalid GPU ID: {gpu_id}")
         except ValueError:
-            print("错误: GPU ID必须是数字")
+            print("error: GPU ID must be a number")
             
     def do_killgpu(self, arg):
-        """终止指定GPU上的所有进程: killgpu <id>"""
+        """kill all processes on specified GPU: killgpu <id>"""
         try:
             gpu_id = int(arg.strip())
-            self.program_manager.kill_process_by_gpu(gpu_id)
+            num = self.program_manager.kill_process_by_gpu(gpu_id)
+            print(f"killed {num} processes on GPU {gpu_id}")
         except ValueError:
-            print("错误: GPU ID必须是数字")
+            print("error: GPU ID must be a number")
             
     def do_kill(self, arg):
-        """终止指定ID的进程: kill <id>"""
+        """kill process by specified ID: kill <id>"""
         try:
             process_id = int(arg.strip())
-            self.program_manager.kill_process(process_id)
+            if_success = self.program_manager.kill_process(process_id)
+            if if_success:
+                print(f"process {process_id} killed")
+            else:
+                print(f"error: process ID {process_id} not found")
         except ValueError:
-            print("错误: 进程ID必须是数字")
+            print("error: process ID must be a number")
             
     def do_ls(self, arg):
-        """列出所有正在运行的进程: ls"""
-        self.program_manager.list_processes()
+        """list all processes: ls"""
+        dict = self.program_manager.get_process_dict()
+        max_processes = self.program_manager.get_max_processes()
+        terminal_width = shutil.get_terminal_size().columns
+        print(f"now processes: {len(dict)}, max processes: {max_processes}")
+        if len(dict) == 0:
+            print("no running processes")
+            return
+        print("-" * 130)
+        print(f"{'ProcID':<8} {'PID':<8} {'TodoID':<8} {'GPUID':<8} {'Status':<8} {'Func':<100}")
+        print("-" * 130)
+        for k, v in dict.items():
+            print(f"{k:<8} {v['pid']:<8} {v['todo_id']:<8} {v['gpu_id']:<8} {v['status']:<8} {v['func'][:80]}")
+            while len(v['func']) > 80:
+                print(" "*45, end="")
+                v['func'] = v['func'][80:]
+                print(v['func'][:80])
+        print("-" * 130)
         
     def do_gpus(self, arg):
-        """列出所有GPU状态: gpus"""
-        self.program_manager.list_gpus()
+        """list all GPU status: gpus"""
+        # self.program_manager.list_gpus()
+        dict = self.program_manager.get_gpu_dict()
+        terminal_width = shutil.get_terminal_size().columns
+        print("-" * 100)
+        print(f"{'ID':<5} {'Status':<12} {'Util':<10} {'Free/Total(MB)':<18} {'Use/All':<10} {'Temp':<8} {'Power/Max(W)':<20}")
+        print("-" * 100)
+        for k, v in dict.items():
+            util_str = f"{v['utilization']:>3.0f}%"
+            memory_str = f"{v['free_memory']:>6.0f}/{v['total_memory']:<6.0f}"
+            process_str = f"{v['user_process_num']:>3}/{v['all_process_num']:<3}"
+            power_str = f"{v['power']:>6}/{v['max_power']:<6}"
+            print(f"{k:<5} {v['status']:<12} {util_str:<10} {memory_str:<18} {process_str:<10} {v['temperature']:<8} {power_str:<20}")
+        print("-" * 100)
         
     def do_exit(self, arg=None):
-        """退出程序: exit"""
-        print("再见!")
+        """exit the program: exit"""
+        print("bye !")
         return True
         
-    def do_quit(self, arg):
-        """退出程序: quit"""
-        return self.do_exit(arg)
-        
     def do_EOF(self, arg):
-        """Ctrl+D退出程序"""
-        print()
+        """Ctrl+D exit the program"""
         return self.do_exit(arg)
     
     def do_max(self, arg):
-        """设置最大进程数: max <num>"""
+        """set the max processes: max <num>"""
         try:
             max_processes = int(arg.strip())
             self.program_manager.set_max_processes(max_processes)
         except ValueError:
-            print("错误: 最大进程数必须是数字")
+            print("error: max processes must be a number")
+            
+    def do_todo(self, arg):
+        """list the todo: todo"""
+        todos = self.program_manager.get_todo_dict()
+        max_show_num = 5
+        print(f"todo num: {len(todos)}")
+        if len(todos) == 0:
+            print("no todo")
+            return
+        for k, v in enumerate(todos):
+            if k >= max_show_num:
+                print(f"...")
+                break
+            print(f"task id: {k}, config: {v}")
 
 def run_cli(func, todo_dir=None):
-    """启动命令行界面"""
+    """run the command line interface"""
     program = ProgramManager(func, todo_dir)
     cli = CommandLineInterface(program)
     try:
         cli.cmdloop()
     except KeyboardInterrupt:
-        print("\n接收到中断信号，正在退出...")
+        print("\nreceived interrupt signal, exiting...")
         sys.exit(0)
 
 if __name__ == "__main__":

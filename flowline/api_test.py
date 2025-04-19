@@ -24,43 +24,111 @@ def get_app(get_command):
 
 @app.route('/api/gpus', methods=['GET'])
 def get_gpus():
-    return jsonify([
+    return jsonify(
         {
-            'gpu_id': '0',
-            'name': '模拟GPU',
-            'status': 'available',
-            'memory': {'free': 1, 'used': 11, 'total': 12},
-            'utilization': 5,
-            'temperature': 40,
-            'power': {'current': 30, 'max': 250},
-            'user_process_num': 1,
-            'other_process_num': 2
+            "0": {
+                "all_process_num": 1, 
+                "free_memory": 47159.6875, 
+                "max_power": 450.0, 
+                "name": "NVIDIA GeForce RTX 4090", 
+                "power": 69.87, 
+                "status": "disabled", 
+                "temperature": 39, 
+                "total_memory": 49140.0, 
+                "user_process_num": 0, 
+                "utilization": 0
+            }, 
+            "1": {
+                "all_process_num": 0, 
+                "free_memory": 48643.25, 
+                "max_power": 450.0, 
+                "name": "NVIDIA GeForce RTX 4090", 
+                "power": 6.886, 
+                "status": "disabled", 
+                "temperature": 27, 
+                "total_memory": 49140.0, 
+                "user_process_num": 0, 
+                "utilization": 0
+            }, 
+            "2": {
+                "all_process_num": 1, 
+                "free_memory": 44603.6875, 
+                "max_power": 450.0, 
+                "name": "NVIDIA GeForce RTX 4090", 
+                "power": 255.892, 
+                "status": "disabled", 
+                "temperature": 58, 
+                "total_memory": 49140.0, 
+                "user_process_num": 0, 
+                "utilization": 55
+            },
         }
-    ])
+    )
 
-@app.route('/api/processes', methods=['GET'])
+@app.route('/api/process', methods=['GET'])
 def get_processes():
-    return jsonify([
+    return jsonify(
         {
-            'id': '0',
-            'todoId': '0',
-            'status': 'running',
-            'pid': 12345,
-            'gpu': '0',
-            'user': 'user',
-            'startTime': '2023-01-01 12:00:00',
-            'runTime': '00:00:00',
-            'command': 'python test.py'
-        },
-        {
-            'id': '1',
-            'todoId': '1',
-            'status': 'running',
-            'pid': 12346,
-            'gpu': '0',
-            'user': 'user',
-            'startTime': '2023-01-01 12:00:00',
-            'runTime': '00:00:00',
-            'command': 'python test.py'
-        },
-    ])
+            "0": {
+                "func": "func(({'data_name': 'rotate_mnist', 'model_name': 'cnn', 'method_name': 'GST', 'domain_num': 2, 'seed': 1}, 4), {})", 
+                "gpu_id": 0, 
+                "pid": 1738158, 
+                "process_id": 0, 
+                "status": "RUNNING", 
+                "start_time": 1745037341.512741, 
+                "todo_id": 0
+            }, 
+            "1": {
+                "func": "func(({'data_name': 'rotate_mnist', 'model_name': 'cnn', 'method_name': 'GST', 'domain_num': 2, 'seed': 2}, 4), {})", 
+                "gpu_id": 1, 
+                "pid": 1738246, 
+                "process_id": 1, 
+                "status": "RUNNING", 
+                "start_time": 1745037346.512741, 
+                "todo_id": 1
+            },
+        }
+    )
+
+@app.route('/api/gpu/<gpu_id>/process', methods=['GET'])
+def get_gpu_tasks(gpu_id):
+    if gpu_id == "0":
+        return jsonify(
+            {
+                "0": {
+                    "func": "func(({'data_name': 'rotate_mnist', 'model_name': 'cnn', 'method_name': 'GST', 'domain_num': 2, 'seed': 1}, 4), {})", 
+                    "gpu_id": 0, 
+                    "pid": 1738158, 
+                    "process_id": 0, 
+                    "status": "RUNNING", 
+                    "todo_id": 0
+                }
+            }
+        )
+    elif gpu_id == "1":
+        return jsonify(
+            {
+                "1": {
+                    "func": "func(({'data_name': 'rotate_mnist', 'model_name': 'cnn', 'method_name': 'GST', 'domain_num': 2, 'seed': 2}, 4), {})", 
+                    "gpu_id": 1, 
+                    "pid": 1738246, 
+                    "process_id": 1, 
+                    "status": "RUNNING", 
+                    "todo_id": 1
+                },
+            }
+        )
+    elif gpu_id == "2":
+        return jsonify({})
+    else:
+        return jsonify(
+            {
+                "error": "Invalid GPU ID"
+            }
+        )
+
+"""
+curl http://127.0.0.1:5000/api/process
+curl http://127.0.0.1:5000/api/gpus
+curl http://127.0.0.1:5000/api/gpu/0/process
+"""
