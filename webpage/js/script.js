@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchData();
     
     // 设置周期性更新，降低频率（改为30秒一次）
-    setInterval(fetchData, 30000);
+    setInterval(fetchData, 10000);
 });
 
 // 获取所有数据
@@ -493,9 +493,10 @@ function renderProcessTable() {
 // 获取状态文本
 function getStatusText(status) {
     const statusMap = {
-        'available': '空闲',
-        'busy': '忙碌',
+        'available': '启用',
         'disabled': '禁用',
+        'pending': '待运行',
+        'busy': '忙碌',
         'running': '运行中',
         'completed': '已完成',
         'failed': '失败',
