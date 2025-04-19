@@ -1,6 +1,7 @@
 # IDE
 */__pycache__
 __pycache__
+.vscode
 
 # todo
 */todo.xlsx

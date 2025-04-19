@@ -23,5 +23,5 @@ def main2():
     pass
 
 if __name__ == '__main__':
-    main()  # 注释掉分离式服务器
-    # main2()   # 使用集成式服务器
+    main()  # 分离式服务器
+    # main2()   # 集成式服务器

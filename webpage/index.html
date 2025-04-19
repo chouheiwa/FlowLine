@@ -20,6 +20,14 @@
         </div>
     </nav>
     
+    <div class="toast-container">
+        <div class="toast" id="toast">
+            <div class="toast-content">
+                <span class="toast-message"></span>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="sidebar">
             <div class="section-header">
@@ -63,9 +71,10 @@
                     <table id="processesTable">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>TODO ID</th>
+                                <th>进程</th>
                                 <th>状态</th>
+                                <th>PID</th>
+                                <th>任务</th>
                                 <th>GPU</th>
                                 <th>用户</th>
                                 <th>开始时间</th>
@@ -84,4 +93,4 @@
     
     <script src="js/script.js"></script>
 </body>
-</html>
+</html> 

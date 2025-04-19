@@ -6,12 +6,34 @@ const API_BASE_URL = 'http://localhost:5000/api';
 let gpuData = [];
 let taskData = [];
 
+// Toast消息显示函数
+function showToast(message, duration = 3000) {
+    const toast = document.getElementById('toast');
+    const toastMessage = toast.querySelector('.toast-message');
+    
+    // 设置消息内容
+    toastMessage.textContent = message;
+    
+    // 显示toast
+    toast.classList.add('show');
+    toast.classList.remove('hide');
+    
+    // 设置定时器，在指定时间后隐藏toast
+    setTimeout(() => {
+        // 添加隐藏类触发淡出动画
+        toast.classList.add('hide');
+        toast.classList.remove('show');
+    }, duration);
+}
+
 // 设置刷新按钮点击事件
 document.getElementById('refreshBtn').addEventListener('click', function(e) {
     // 防止页面刷新
     e.preventDefault();
     console.log("刷新按钮被点击");
     fetchData();
+    // 显示刷新提示
+    showToast('数据刷新成功');
 });
 
 // 设置清空按钮点击事件
@@ -48,6 +70,8 @@ async function fetchData() {
         console.log("UI渲染完成");
     } catch (error) {
         console.error('获取数据失败:', error);
+        // 显示错误提示
+        showToast(`获取数据失败: ${error.message}`, 5000);
         // 在页面上显示错误信息
         document.getElementById('gpuList').innerHTML = `<div class="error-message">获取数据失败: ${error.message}</div>`;
     }
@@ -123,6 +147,7 @@ async function fetchProcessData() {
                 taskData.push({
                     process_id: process_id,
                     todo_id: process.todo_id,
+                    pid: process.pid,
                     status: process.status.toLowerCase(),
                     gpu_id: process.gpu_id.toString(),
                     user: "user", // 假设API没有提供用户信息
@@ -164,6 +189,7 @@ async function fetchGpuTasks(gpu_id) {
                 tasks.push({
                     process_id: task_id,
                     todo_id: task.todo_id,
+                    pid: task.pid,
                     status: task.status.toLowerCase(),
                     gpu_id: task.gpu_id.toString(),
                     user: "user", // 假设API没有提供用户信息
@@ -191,9 +217,15 @@ async function killTask(process_id) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const result = await response.json();
+        if (result.success) {
+            showToast(`成功终止任务: ${process_id}`);
+        } else {
+            showToast(`无法终止任务: ${process_id}`, 5000);
+        }
         return result.success;
     } catch (error) {
         console.error(`终止任务 ${process_id} 失败:`, error);
+        showToast(`终止任务失败: ${error.message}`, 5000);
         return false;
     }
 }
@@ -208,16 +240,20 @@ async function switchGpu(gpu_id) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const result = await response.json();
+        if (result.is_on !== null) {
+            showToast(`GPU ${gpu_id} 状态已切换为: ${result.is_on ? '开启' : '关闭'}`);
+        }
         return result.is_on;
     } catch (error) {
         console.error(`切换GPU ${gpu_id} 状态失败:`, error);
+        showToast(`切换GPU状态失败: ${error.message}`, 5000);
         return null;
     }
 }
 
 // 清空已完成的任务（示例函数，实际API需要实现）
 async function clearCompletedTasks() {
-    alert('此功能需要后端API支持');
+    showToast('正在清理已完成/失败的任务...');
     // 实际应用中，这里会调用后端API
     // 暂时仅触发刷新数据
     fetchData();
@@ -272,6 +308,7 @@ function renderGpuList() {
         gpuCard.innerHTML = `
             <div class="gpu-name">GPU ${gpu.gpu_id}</div>
             <div class="gpu-status ${gpu.status}">${getStatusText(gpu.status)}</div>
+            <button class="gpu-switch">切换</button>
             <div class="gpu-stats">
                 <div class="progress-bar-container">
                     <div class="progress-bar-text">显存：${gpu.memory.free}GB 可用</div>
@@ -294,15 +331,23 @@ function renderGpuList() {
             renderGpuDetails(gpu);
             await renderActiveTasks(gpu.gpu_id);
         });
-        
-        // 添加右键菜单，用于切换GPU状态
-        gpuCard.addEventListener('contextmenu', async (e) => {
-            e.preventDefault();
+
+        const switchBtn = gpuCard.querySelector('.gpu-switch');
+        switchBtn.addEventListener('click', async () => {
             const isOn = await switchGpu(gpu.gpu_id);
             if (isOn !== null) {
                 fetchData(); // 刷新数据
             }
         });
+        
+        // // 添加右键菜单，用于切换GPU状态
+        // gpuCard.addEventListener('contextmenu', async (e) => {
+        //     e.preventDefault();
+        //     const isOn = await switchGpu(gpu.gpu_id);
+        //     if (isOn !== null) {
+        //         fetchData(); // 刷新数据
+        //     }
+        // });
         
         gpuListEl.appendChild(gpuCard);
     });
@@ -356,7 +401,7 @@ function renderGpuDetails(gpu) {
     }
 }
 
-// 渲染当前GPU上的活跃任务
+// 渲染活跃任务
 async function renderActiveTasks(gpu_id) {
     console.log("渲染活跃任务, GPU ID:", gpu_id);
     
@@ -389,7 +434,7 @@ async function renderActiveTasks(gpu_id) {
                 <div class="task-info">
                     <div class="task-header">
                         <span class="task-id">${task.process_id}</span>
-                        <span class="task-todo-id">${task.todo_id}</span>
+                        <span class="task-todo-id">Todo:${task.todo_id}</span>
                     </div>
                     <div class="task-command">${task.command}</div>
                 </div>
@@ -432,9 +477,10 @@ function renderProcessTable() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${task.process_id}</td>
-            <td>${task.todo_id}</td>
             <td><span class="process-status ${task.status}">${getStatusText(task.status)}</span></td>
-            <td>${getGpuName(task.gpu_id)}</td>
+            <td>${task.pid}</td>
+            <td>${task.todo_id}</td>
+            <td>${task.gpu_id}</td>
             <td>${task.user}</td>
             <td>${task.startTime}</td>
             <td>${task.runTime}</td>
@@ -442,12 +488,6 @@ function renderProcessTable() {
         `;
         tableBody.appendChild(tr);
     });
-}
-
-// 获取GPU显示名称
-function getGpuName(gpu_id) {
-    const gpu = gpuData.find(g => g.gpu_id === gpu_id);
-    return gpu ? gpu.name : gpu_id;
 }
 
 // 获取状态文本
