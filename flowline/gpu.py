@@ -140,8 +140,11 @@ class GPU_Manager:
 
     @synchronized
     def switch_gpu(self, gpu_id):
+        if gpu_id < 0 or gpu_id >= len(self.all_gpu):
+            logger.error(f"GPU_Manager switch_gpu: Invalid GPU ID: {gpu_id}")
+            return False, None
         self.usable_mark[gpu_id] = not self.usable_mark[gpu_id]
-        return self.usable_mark[gpu_id]
+        return True, self.usable_mark[gpu_id]
     
     def get_gpu_dict(self):
         gpu_dict = {}

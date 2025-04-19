@@ -100,36 +100,31 @@ class ProgramManager:
         
     def switch_gpu(self, gpu_id):
         """switch GPU available status"""
-        if 0 <= gpu_id < len(self.gpu_manager.all_gpu):
-            is_on = self.gpu_manager.switch_gpu(gpu_id)
-            print(f"GPU {gpu_id} switched to {'available' if is_on else 'unavailable'}")
-            return True
-        else:
-            print(f"invalid GPU ID: {gpu_id}")
-            return False
+        if_success, is_on = self.gpu_manager.switch_gpu(gpu_id)
+        return if_success, is_on
         
     @synchronized
     def kill_process_by_gpu(self, gpu_id):
         """kill all processes on specified GPU"""
-        if 0 <= gpu_id < len(self.gpu_manager.all_gpu):
-            num = self.process_manager.kill_process_by_gpu(gpu_id)
-            print(f"killed all processes on GPU {gpu_id}, {num} processes killed")
-        else:
-            print(f"invalid GPU ID: {gpu_id}")
+        num = self.process_manager.kill_process_by_gpu(gpu_id)
+        return num
         
     @synchronized
     def kill_process(self, process_id):
         """kill process by specified ID"""
-        if self.process_manager.kill_process_by_id(process_id):
-            print(f"process {process_id} killed")
-        else:
-            print(f"process {process_id} not found")
+        return self.process_manager.kill_process_by_id(process_id)
     
     def set_max_processes(self, max_processes: int):
         self.process_manager.set_max_processes(max_processes)
         
+    def get_max_processes(self):
+        return self.process_manager.get_max_processes()
+        
     def get_process_dict(self):
-        return self.process_manager.get_process_dict(), self.process_manager.get_max_processes()
+        return self.process_manager.get_process_dict()
+    
+    def get_process_dict_by_gpu(self, gpu_id: int):
+        return self.process_manager.get_process_dict_by_gpu(gpu_id)
         
     def get_gpu_dict(self):
         return self.gpu_manager.get_gpu_dict()

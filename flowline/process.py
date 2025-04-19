@@ -101,6 +101,7 @@ class Process:
             "pid": self.pid,
             "todo_id": self.todo_id,
             "gpu_id": self.gpu_id,
+            "start_time": self.start_time,
             "status": self.get_status(),
             "func": str(self.fc)
         }
@@ -190,6 +191,9 @@ class ProcessManager:
 
     def get_process_dict(self):
         return {p.process_id: p.get_dict() for p in self.processes}
+    
+    def get_process_dict_by_gpu(self, gpu_id: int):
+        return {p.process_id: p.get_dict() for p in self.processes if p.gpu_id == gpu_id}
 
 if __name__ == "__main__":
     def on_completed(todo_id, process_id, gpu_id, pid, status):

@@ -5,7 +5,7 @@ import shutil
 from .program import ProgramManager
 
 class CommandLineInterface(cmd.Cmd):
-    intro = '欢迎使用任务处理系统. 输入 help 或 ? 查看帮助.\n'
+    intro = 'welcome to use task processing system. input help or ? to view help.\n'
     prompt = '> '
     
     def __init__(self, program_manager):
@@ -13,37 +13,47 @@ class CommandLineInterface(cmd.Cmd):
         self.program_manager = program_manager
         
     def do_run(self, arg):
-        """切换处理循环状态: run"""
+        """switch running status: run"""
         is_run = self.program_manager.switch_run()
-        print(f"处理循环现在{'正在运行' if is_run else '已停止'}")
+        print(f"processing loop {'running' if is_run else 'stopped'}")
         
     def do_gpu(self, arg):
-        """切换GPU状态: gpu <id>"""
+        """switch GPU status: gpu <id>"""
         try:
             gpu_id = int(arg.strip())
-            self.program_manager.switch_gpu(gpu_id)
+            if_success, is_on = self.program_manager.switch_gpu(gpu_id)
+            if if_success:
+                print(f"GPU {gpu_id} switched to {'available' if is_on else 'unavailable'}")
+            else:
+                print(f"error: invalid GPU ID: {gpu_id}")
         except ValueError:
-            print("错误: GPU ID必须是数字")
+            print("error: GPU ID must be a number")
             
     def do_killgpu(self, arg):
-        """终止指定GPU上的所有进程: killgpu <id>"""
+        """kill all processes on specified GPU: killgpu <id>"""
         try:
             gpu_id = int(arg.strip())
-            self.program_manager.kill_process_by_gpu(gpu_id)
+            num = self.program_manager.kill_process_by_gpu(gpu_id)
+            print(f"killed {num} processes on GPU {gpu_id}")
         except ValueError:
-            print("错误: GPU ID必须是数字")
+            print("error: GPU ID must be a number")
             
     def do_kill(self, arg):
-        """终止指定ID的进程: kill <id>"""
+        """kill process by specified ID: kill <id>"""
         try:
             process_id = int(arg.strip())
-            self.program_manager.kill_process(process_id)
+            if_success = self.program_manager.kill_process(process_id)
+            if if_success:
+                print(f"process {process_id} killed")
+            else:
+                print(f"error: process ID {process_id} not found")
         except ValueError:
-            print("错误: 进程ID必须是数字")
+            print("error: process ID must be a number")
             
     def do_ls(self, arg):
         """list all processes: ls"""
-        dict, max_processes = self.program_manager.get_process_dict()
+        dict = self.program_manager.get_process_dict()
+        max_processes = self.program_manager.get_max_processes()
         terminal_width = shutil.get_terminal_size().columns
         print(f"now processes: {len(dict)}, max processes: {max_processes}")
         if len(dict) == 0:
