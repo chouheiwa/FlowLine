@@ -64,7 +64,7 @@ def switch_gpu(gpu_id):
         return jsonify({'gpu_id': gpu_id, 'success': False, 'error': str(e)})
 
 @app.route('/api/run', methods=['POST'])
-def start_process_loop():
+def run_process_loop():
     try:
         if_run = program_manager.switch_run()
         return jsonify({'if_run': if_run})

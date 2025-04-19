@@ -5,26 +5,8 @@ const API_BASE_URL = 'http://localhost:5000/api';
 // 用于存储数据的变量
 let gpuData = [];
 let taskData = [];
-
-// Toast消息显示函数
-function showToast(message, duration = 3000) {
-    const toast = document.getElementById('toast');
-    const toastMessage = toast.querySelector('.toast-message');
-    
-    // 设置消息内容
-    toastMessage.textContent = message;
-    
-    // 显示toast
-    toast.classList.add('show');
-    toast.classList.remove('hide');
-    
-    // 设置定时器，在指定时间后隐藏toast
-    setTimeout(() => {
-        // 添加隐藏类触发淡出动画
-        toast.classList.add('hide');
-        toast.classList.remove('show');
-    }, duration);
-}
+// 记录当前选中的 GPU ID
+let selectedGpuId = null;
 
 // 设置刷新按钮点击事件
 document.getElementById('refreshBtn').addEventListener('click', function(e) {
@@ -34,6 +16,33 @@ document.getElementById('refreshBtn').addEventListener('click', function(e) {
     fetchData();
     // 显示刷新提示
     showToast('数据刷新成功');
+});
+
+// 设置运行按钮点击事件
+document.getElementById('runBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    console.log("运行按钮被点击");
+    // 发送运行/停止请求
+    fetch(`${API_BASE_URL}/run`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.if_run) {
+            showToast('程序已开始运行');
+        } else {
+            showToast('程序已停止运行');
+        }
+        // 刷新数据以更新UI
+        fetchData();
+    })
+    .catch(error => {
+        console.error('运行控制失败:', error);
+        showToast(`运行控制失败: ${error.message}`, 5000);
+    });
 });
 
 // 设置清空按钮点击事件
@@ -265,10 +274,12 @@ async function renderUI() {
     
     // 如果有GPU，则渲染第一个GPU的详情和任务
     if (gpuData.length > 0) {
-        const selectedGpu = document.querySelector('.gpu-card.selected');
-        const selectedGpuId = selectedGpu ? selectedGpu.dataset.gpu_id : gpuData[0].gpu_id;
+        // 如果selectedGpuId为null或者不在当前的gpuData中，则默认选择第一个GPU
+        if (!selectedGpuId || !gpuData.find(g => g.gpu_id === selectedGpuId)) {
+            selectedGpuId = gpuData[0].gpu_id;
+        }
         
-        const gpu = gpuData.find(g => g.gpu_id === selectedGpuId) || gpuData[0];
+        const gpu = gpuData.find(g => g.gpu_id === selectedGpuId);
         renderGpuDetails(gpu);
         await renderActiveTasks(gpu.gpu_id);
     }
@@ -294,14 +305,18 @@ function renderGpuList() {
         return;
     }
     
+    // 如果selectedGpuId为null，初始化为第一个GPU的ID
+    if (!selectedGpuId && gpuData.length > 0) {
+        selectedGpuId = gpuData[0].gpu_id;
+    }
+    
     gpuData.forEach(gpu => {
         const memoryPercent = (gpu.memory.used / gpu.memory.total * 100).toFixed(0);
         const memoryClass = memoryPercent > 80 ? 'danger' : memoryPercent > 50 ? 'warning' : '';
         const utilizationClass = gpu.utilization > 80 ? 'danger' : gpu.utilization > 50 ? 'warning' : '';
         
         const gpuCard = document.createElement('div');
-        const selectedGpu = document.querySelector('.gpu-card.selected');
-        const isSelected = selectedGpu ? selectedGpu.dataset.gpu_id === gpu.gpu_id : gpu.gpu_id === gpuData[0].gpu_id;
+        const isSelected = gpu.gpu_id === selectedGpuId;
         
         gpuCard.className = `gpu-card ${isSelected ? 'selected' : ''}`;
         gpuCard.dataset.gpu_id = gpu.gpu_id;
@@ -328,6 +343,7 @@ function renderGpuList() {
         gpuCard.addEventListener('click', async () => {
             document.querySelectorAll('.gpu-card').forEach(card => card.classList.remove('selected'));
             gpuCard.classList.add('selected');
+            selectedGpuId = gpu.gpu_id; // 更新选中的GPU ID
             renderGpuDetails(gpu);
             await renderActiveTasks(gpu.gpu_id);
         });
