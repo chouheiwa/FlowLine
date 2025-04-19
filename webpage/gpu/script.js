@@ -6,26 +6,6 @@ const API_BASE_URL = 'http://localhost:5000/api';
 let gpuData = [];
 let taskData = [];
 
-// Toast消息显示函数
-function showToast(message, duration = 3000) {
-    const toast = document.getElementById('toast');
-    const toastMessage = toast.querySelector('.toast-message');
-    
-    // 设置消息内容
-    toastMessage.textContent = message;
-    
-    // 显示toast
-    toast.classList.add('show');
-    toast.classList.remove('hide');
-    
-    // 设置定时器，在指定时间后隐藏toast
-    setTimeout(() => {
-        // 添加隐藏类触发淡出动画
-        toast.classList.add('hide');
-        toast.classList.remove('show');
-    }, duration);
-}
-
 // 设置刷新按钮点击事件
 document.getElementById('refreshBtn').addEventListener('click', function(e) {
     // 防止页面刷新

@@ -382,23 +382,6 @@ function hideConfirmDialog() {
     confirmDialog.classList.remove('show');
 }
 
-// 显示消息提示
-function showToast(message) {
-    toastMessage.textContent = message;
-    toast.classList.add('show');
-    
-    // 3秒后自动隐藏
-    setTimeout(() => {
-        toast.classList.remove('show');
-        toast.classList.add('hide');
-        
-        // 动画结束后移除hide类
-        setTimeout(() => {
-            toast.classList.remove('hide');
-        }, 300);
-    }, 3000);
-}
-
 // 获取设置部分的名称
 function getSectionName(section) {
     const names = {

@@ -470,20 +470,3 @@ function clearLog(logFileName) {
     
     showToast(`日志文件 ${logFileName} 已清空`);
 }
-
-// 显示消息提示
-function showToast(message) {
-    toastMessage.textContent = message;
-    toast.classList.add('show');
-    
-    // 3秒后自动隐藏
-    setTimeout(() => {
-        toast.classList.remove('show');
-        toast.classList.add('hide');
-        
-        // 动画结束后移除hide类
-        setTimeout(() => {
-            toast.classList.remove('hide');
-        }, 300);
-    }, 3000);
-} 

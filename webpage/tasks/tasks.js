@@ -455,20 +455,3 @@ function clearCompletedTasks() {
     // 显示提示
     showToast('已清空完成/失败任务');
 }
-
-// 显示消息提示
-function showToast(message) {
-    toastMessage.textContent = message;
-    toast.classList.add('show');
-    
-    // 3秒后自动隐藏
-    setTimeout(() => {
-        toast.classList.remove('show');
-        toast.classList.add('hide');
-        
-        // 动画结束后移除hide类
-        setTimeout(() => {
-            toast.classList.remove('hide');
-        }, 300);
-    }, 3000);
-} 
