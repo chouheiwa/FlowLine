@@ -1,0 +1,221 @@
+/* 侧边栏 */
+.sidebar {
+    width: 300px;
+    background-color: white;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 日志文件列表 */
+.log-files {
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.log-file-card {
+    background-color: #f9fafb;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.log-file-card:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.log-file-card.selected {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+}
+
+.log-file-name {
+    font-weight: 500;
+    flex: 1;
+}
+
+.log-file-size {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-left: 10px;
+}
+
+.log-file-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.log-file-indicator.gpu {
+    background-color: #3b82f6;
+}
+
+.log-file-indicator.api {
+    background-color: #10b981;
+}
+
+.log-file-indicator.todo {
+    background-color: #f59e0b;
+}
+
+.log-file-indicator.process {
+    background-color: #6366f1;
+}
+
+.log-file-indicator.utils {
+    background-color: #8b5cf6;
+}
+
+.log-file-indicator.program {
+    background-color: #ec4899;
+}
+
+/* 日志筛选表单 */
+.log-filter-form {
+    padding: 15px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #4b5563;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.form-actions {
+    text-align: right;
+}
+
+/* 主内容区 */
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.logs-header {
+    background-color: white;
+}
+
+.logs-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #1e293b;
+    color: #f8fafc;
+    position: relative;
+}
+
+/* 日志内容 */
+.log-content {
+    flex: 1;
+    padding: 15px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.log-auto-scroll {
+    padding: 10px 15px;
+    background-color: #0f172a;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.log-auto-scroll label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.log-auto-scroll input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+/* 日志级别样式 */
+.log-line {
+    margin-bottom: 2px;
+    padding: 2px 0;
+    border-radius: 2px;
+}
+
+.log-line:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.log-line.info {
+    color: #93c5fd;
+}
+
+.log-line.warning {
+    color: #fcd34d;
+}
+
+.log-line.error {
+    color: #f87171;
+}
+
+.log-line.debug {
+    color: #a5b4fc;
+}
+
+/* 时间戳样式 */
+.log-timestamp {
+    color: #64748b;
+    margin-right: 10px;
+}
+
+/* 空状态 */
+.empty-log-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: #94a3b8;
+    font-size: 1.1rem;
+}
+
+/* 高亮搜索结果 */
+.log-highlight {
+    background-color: rgba(234, 179, 8, 0.5);
+    color: #fef08a;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+    }
+} 
