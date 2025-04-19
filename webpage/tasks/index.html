@@ -4,16 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FlowLine - 任务管理系统</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/type.css">
+    <link rel="stylesheet" href="tasks.css">
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">FlowLine</div>
+        <a href="/"><div class="logo">FlowLine</div></a>
         <div class="nav-items">
-            <div class="nav-item"><a href="/gpu">GPU</a></div>
-            <div class="nav-item active"><a href="/tasks">任务</a></div>
-            <div class="nav-item"><a href="/logs">日志</a></div>
-            <div class="nav-item"><a href="/settings">设置</a></div>
+            <a href="/gpu"><div class="nav-item active">GPU</div></a>
+            <a href="/tasks"><div class="nav-item">任务</div></a>
+            <a href="/logs"><div class="nav-item">日志</div></a>
+            <a href="/settings"><div class="nav-item">设置</div></a>
         </div>
         <div class="user-info">
             <span>Admin</span>
@@ -121,6 +122,6 @@
         </div>
     </div>
     
-    <script src="../js/tasks.js"></script>
+    <script src="tasks.js"></script>
 </body>
 </html> 
