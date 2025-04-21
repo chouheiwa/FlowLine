@@ -1,6 +1,6 @@
-# FlowLine - GPU管理系统
+# FlowLine
 
-FlowLine是一个GPU任务管理和监控系统，提供命令行和Web界面，能够帮助管理和调度GPU任务，监控GPU状态。
+FlowLine是一个GPU任务管理和监控系统，提供命令行和Web界面，能够帮助管理和调度任务，监控GPU状态。
 
 ## 功能特点
 
@@ -30,7 +30,7 @@ FlowLine是一个GPU任务管理和监控系统，提供命令行和Web界面，
 ### 前提条件
 
 - Python 3.6+
-- NVIDIA GPU + CUDA驱动
+- **NVIDIA GPU + CUDA驱动**
 - 现代Web浏览器
 
 ### 安装步骤
@@ -51,26 +51,18 @@ FlowLine是一个GPU任务管理和监控系统，提供命令行和Web界面，
 ### 启动API服务器
 
 后端是一个 Flask 应用，您需要运行 server.py 文件来启动它：
+
 ```
 cd ~/flowline && python server.py
 ```
 
 使用 Python 的内置 HTTP 服务器来提供前端文件：
+
 ```
 cd ~/flowline/webpage && python -m http.server 8000
 ```
+
 这会在 http://localhost:8000 上启动一个简单的 HTTP 服务器，提供前端 HTML、CSS 和 JavaScript 文件。
-
-### 访问Web界面
-
-直接在浏览器中打开 `webpage/index.html`，确保API服务器已经启动。
-
-或者使用简单的HTTP服务器:
-
-```
-cd webpage
-python -m http.server 8000
-```
 
 然后访问 http://localhost:8000
 
@@ -108,5 +100,5 @@ python main.py
 
 ## 许可证
 
-MIT
+[Apache License 2.0](/LICENSE)
 
