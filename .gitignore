@@ -4,10 +4,10 @@ __pycache__
 .vscode
 
 # todo
-*/todo.xlsx
-*/todo.csv
-todo.xlsx
-todo.csv
+# */todo.xlsx
+# */todo.csv
+# todo.xlsx
+# todo.csv
 
 # log
 */log/

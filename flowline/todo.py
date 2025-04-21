@@ -175,10 +175,14 @@ class TodoManager:
 # todo_manager = TodoManager()
 
 if __name__ == "__main__":
-    # process_configs()
+    process_configs()
     # print(2)
-    todo = TodoManager()
-    print(todo.get_next_todo())
-    print(todo.get_next_todo())
-    todo.update_todo_ids(0)
-    print(todo.get_next_todo())
+    # todo = TodoManager()
+    # print(todo.get_next_todo())
+    # print(todo.get_next_todo())
+    # todo.update_todo_ids(0)
+    # print(todo.get_next_todo())
+    
+    """
+    python -m flowline.todo
+    """

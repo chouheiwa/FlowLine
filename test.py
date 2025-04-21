@@ -13,16 +13,16 @@ if __name__ == "__main__":
     parser.add_argument('--seed', type=int, default=1, help='seed')
     args = parser.parse_args()
     
-    import torch
+    # import torch
 
-    print(torch.__version__)  # 检查PyTorch版本
-    # 检查CUDA是否可用
-    if torch.cuda.is_available():
-        x = torch.randn(1000, 1000).to("cuda")
-        y = x @ x
-        print("CUDA is working!")
-    else:
-        print("CUDA is not available.")
+    # print(torch.__version__)  # 检查PyTorch版本
+    # # 检查CUDA是否可用
+    # if torch.cuda.is_available():
+    #     x = torch.randn(1000, 1000).to("cuda")
+    #     y = x @ x
+    #     print("CUDA is working!")
+    # else:
+    #     print("CUDA is not available.")
     
     while True:
         print(time.time(),args.test)

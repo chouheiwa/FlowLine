@@ -15,10 +15,10 @@ socketio = SocketIO(app)
 
 program_manager = None
 
-def get_app(func):
+def get_app(func, todo_dir=None):
     try:
         global program_manager
-        program_manager = ProgramManager(func, todo_dir="todo.xlsx")
+        program_manager = ProgramManager(func, todo_dir)
         logger.info("ProgramManager initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize ProgramManager: {e}")
