@@ -76,7 +76,7 @@ def get_processes():
                 "process_id": 0, 
                 "status": "RUNNING", 
                 "start_time": 1745037341.512741, 
-                "todo_id": 0
+                "task_id": 0
             }, 
             "1": {
                 "func": "func(({'data_name': 'rotate_mnist', 'model_name': 'cnn', 'method_name': 'GST', 'domain_num': 2, 'seed': 2}, 4), {})", 
@@ -85,7 +85,7 @@ def get_processes():
                 "process_id": 1, 
                 "status": "RUNNING", 
                 "start_time": 1745037346.512741, 
-                "todo_id": 1
+                "task_id": 1
             },
         }
     )
@@ -101,7 +101,7 @@ def get_gpu_tasks(gpu_id):
                     "pid": 1738158, 
                     "process_id": 0, 
                     "status": "RUNNING", 
-                    "todo_id": 0
+                    "task_id": 0
                 }
             }
         )
@@ -114,7 +114,7 @@ def get_gpu_tasks(gpu_id):
                     "pid": 1738246, 
                     "process_id": 1, 
                     "status": "RUNNING", 
-                    "todo_id": 1
+                    "task_id": 1
                 },
             }
         )

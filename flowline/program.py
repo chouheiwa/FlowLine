@@ -7,18 +7,18 @@ import os
 
 from .gpu import GPU_Manager
 from .process import ProcessManager, ProcessStatus
-from .todo import TodoManager
+from .task import TaskManager
 from .log import Log
 from .utils import FunctionCall
 
 logger = Log(__name__)
 
 class ProgramManager:
-    def __init__(self, func, todo_dir=None):
+    def __init__(self, func, task_dir=None):
         self._lock = threading.Lock()
         self.gpu_manager = GPU_Manager(8, [4, 5], self.on_gpu_flash)
         self.process_manager = ProcessManager(self.on_process_changed)
-        self.todo_manager = TodoManager(todo_dir)
+        self.task_manager = TaskManager(task_dir)
         
         self.if_run = False
         self._main_thread = None 
@@ -34,13 +34,13 @@ class ProgramManager:
     
     ##################### callback #####################
     
-    def on_process_changed(self, todo_id, process_id, gpu_id, pid, status):
+    def on_process_changed(self, task_id, process_id, gpu_id, pid, status):
         # logger.info(f"ProgramManager: process {process_id} status changed: {status}")
         self.gpu_manager.update_user_process_num(gpu_id, pid, status)
         if status == ProcessStatus.COMPLETED:
-            self.todo_manager.update_todo_ids(todo_id)
+            self.task_manager.update_task_ids(task_id)
         elif status in [ProcessStatus.FAILED, ProcessStatus.KILLED]:
-            self.todo_manager.put_todo_ids(todo_id)
+            self.task_manager.put_task_ids(task_id)
         elif status == ProcessStatus.RUNNING:
             pass
         else:
@@ -62,13 +62,13 @@ class ProgramManager:
         if gpu_id is None:
             logger.info(f"no available GPU")
             return
-        todo_id, dict = self.todo_manager.get_next_todo()
-        if todo_id is None:
+        task_id, dict = self.task_manager.get_next_task()
+        if task_id is None:
             logger.info("no task to handle")
             return
-        if self.process_manager.add_process(FunctionCall(self.func, dict, gpu_id), todo_id, gpu_id) is None:
-            self.todo_manager.put_todo_ids(todo_id)
-            logger.info(f"failed to create process, task {todo_id} put back to queue")
+        if self.process_manager.add_process(FunctionCall(self.func, dict, gpu_id), task_id, gpu_id) is None:
+            self.task_manager.put_task_ids(task_id)
+            logger.info(f"failed to create process, task {task_id} put back to queue")
         
     def run_loop(self):
         """main loop, check and create new task"""
@@ -129,8 +129,8 @@ class ProgramManager:
     def get_gpu_dict(self):
         return self.gpu_manager.get_gpu_dict()
     
-    def get_todo_dict(self):
-        return self.todo_manager.get_todo_dict()
+    def get_task_dict(self):
+        return self.task_manager.get_task_dict()
 
 if __name__ == "__main__":
     def func(dict, gpu_id):

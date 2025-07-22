@@ -112,10 +112,10 @@ function loadLogFiles() {
                 lastModified: '2023-08-18 14:30:22'
             },
             { 
-                name: 'flowline.todo.log',
-                fullPath: '/home/me/flowline/flowline/log/flowline.todo.log',
+                name: 'flowline.task.log',
+                fullPath: '/home/me/flowline/flowline/log/flowline.task.log',
                 size: '1.9KB',
-                type: 'todo',
+                type: 'task',
                 lastModified: '2023-08-18 14:28:45'
             },
             { 
@@ -248,7 +248,7 @@ function generateMockLogContent(logFileName, lines) {
             'HTTP请求: PUT /api/gpus/gpu_001, 状态码: 200, 响应时间: 156ms',
             '身份验证失败: 无效的令牌访问 /api/admin/settings'
         ];
-    } else if (logFileName === 'flowline.todo.log') {
+    } else if (logFileName === 'flowline.task.log') {
         logMessages = [
             '创建任务: task_001 - 样例训练任务',
             '任务状态更新: task_001 从 pending 变为 running',
@@ -289,7 +289,7 @@ function generateMockLogContent(logFileName, lines) {
     } else if (logFileName === 'flowline.program.log') {
         logMessages = [
             'FlowLine 服务启动, 版本: 1.2.3',
-            '加载模块: GPU, API, Todo, Process, Utils',
+            '加载模块: GPU, API, Task, Process, Utils',
             '服务就绪，运行时间: 0天 0小时 0分钟 5秒',
             '系统信息: Linux 5.15.0-52-generic, CPU: 16核, 内存: 64GB',
             '注册信号处理程序: SIGINT, SIGTERM'

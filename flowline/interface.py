@@ -60,10 +60,10 @@ class CommandLineInterface(cmd.Cmd):
             print("no running processes")
             return
         print("-" * 130)
-        print(f"{'ProcID':<8} {'PID':<8} {'TodoID':<8} {'GPUID':<8} {'Status':<8} {'Func':<100}")
+        print(f"{'ProcID':<8} {'PID':<8} {'TaskID':<8} {'GPUID':<8} {'Status':<8} {'Func':<100}")
         print("-" * 130)
         for k, v in dict.items():
-            print(f"{k:<8} {v['pid']:<8} {v['todo_id']:<8} {v['gpu_id']:<8} {v['status']:<8} {v['func'][:80]}")
+            print(f"{k:<8} {v['pid']:<8} {v['task_id']:<8} {v['gpu_id']:<8} {v['status']:<8} {v['func'][:80]}")
             while len(v['func']) > 80:
                 print(" "*45, end="")
                 v['func'] = v['func'][80:]
@@ -103,23 +103,23 @@ class CommandLineInterface(cmd.Cmd):
         except ValueError:
             print("error: max processes must be a number")
             
-    def do_todo(self, arg):
-        """list the todo: todo"""
-        todos = self.program_manager.get_todo_dict()
+    def do_task(self, arg):
+        """list the task: task"""
+        tasks = self.program_manager.get_task_dict()
         max_show_num = 5
-        print(f"todo num: {len(todos)}")
-        if len(todos) == 0:
-            print("no todo")
+        print(f"task num: {len(tasks)}")
+        if len(tasks) == 0:
+            print("no task")
             return
-        for k, v in enumerate(todos):
+        for k, v in enumerate(tasks):
             if k >= max_show_num:
                 print(f"...")
                 break
             print(f"task id: {k}, config: {v}")
 
-def run_cli(func, todo_dir=None):
+def run_cli(func, task_dir=None):
     """run the command line interface"""
-    program = ProgramManager(func, todo_dir)
+    program = ProgramManager(func, task_dir)
     cli = CommandLineInterface(program)
     try:
         cli.cmdloop()

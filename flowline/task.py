@@ -76,42 +76,6 @@ def process_configs():
 
 # -------------------------------
 
-
-def priority_sort(df):    
-    df_with_priority = df.copy()
-    
-    # 1. 添加method_priority列（最重要的排序键）
-    method_priority_map = {'GST': 1, 'GOAT': 2, 'GDO': 3, 'GAS': 4}
-    df_with_priority['method_priority'] = df['method_name'].map(
-        lambda x: method_priority_map.get(x, 999)
-    )
-    
-    # 2. 添加data_priority列
-    data_priority_map = {'rotate_mnist': 1, 'color_mnist': 2, 'portraits': 3}
-    df_with_priority['data_priority'] = df['data_name'].map(
-        lambda x: data_priority_map.get(x, 999)
-    )
-    
-    # 3. 添加model_priority列
-    model_priority_map = {'cnn': 1, 'resnet': 2, 'vgg': 3}
-    df_with_priority['model_priority'] = df['model_name'].map(
-        lambda x: model_priority_map.get(x, 999)
-    )
-    
-    # 明确的排序顺序
-    sort_columns = ['method_priority', 'model_priority', 'data_priority', 'domain_num', 'run_num']
-    
-    # 执行排序，按优先级从低到高（数值小的优先级高）
-    sorted_df = df_with_priority.sort_values(
-        by=sort_columns,
-        ascending=[True, True, True, True, True]
-    )
-    
-    sorted_df = sorted_df.drop(columns=['method_priority', 'data_priority', 'model_priority'])
-    sorted_df = sorted_df.reset_index(drop=True)
-    
-    return sorted_df
-
 def read_configs(excel_path):
     """
     Read the configuration parameters from the Excel file.
@@ -121,17 +85,16 @@ def read_configs(excel_path):
     return df
 
 
-class TodoManager:
+class TaskManager:
     def __init__(self, excel_path=todo_excel_path):
         excel_path = excel_path if excel_path else todo_excel_path
         self._lock = threading.Lock()
         self.excel_path = excel_path
         self.df = read_configs(excel_path)
-        self.df = priority_sort(self.df)
         self.df.to_excel(excel_path, index=False)
-        self.todo_ids = queue.PriorityQueue()
-        for id in self.get_todo_ids():
-            self.todo_ids.put(id)
+        self.task_ids = queue.PriorityQueue()
+        for id in self.get_task_ids():
+            self.task_ids.put(id)
 
     def synchronized(func):
         def wrapper(self, *args, **kwargs):
@@ -139,48 +102,48 @@ class TodoManager:
                 return func(self, *args, **kwargs)
         return wrapper
 
-    def get_todo_configs(self):
+    def get_task_configs(self):
         return self.df[self.df['run_num']==0]
 
-    def get_todo_ids(self):
-        todo_df = self.get_todo_configs()
+    def get_task_ids(self):
+        todo_df = self.get_task_configs()
         return list(todo_df.index)
     
     # -------------------------------
     
-    def get_todo_dict(self):
-        return self.get_todo_configs().to_dict(orient='records')
+    def get_task_dict(self):
+        return self.get_task_configs().to_dict(orient='records')
     
     @synchronized
-    def get_next_todo(self) -> tuple[int, dict]:
-        if self.todo_ids.empty():
+    def get_next_task(self) -> tuple[int, dict]:
+        if self.task_ids.empty():
             return None, None
-        id = self.todo_ids.get()
+        id = self.task_ids.get()
         row = self.df.iloc[id]
         config_dict = row.drop('run_num').to_dict()
         logger.info(f"获取任务 {id} 配置: {config_dict}")
         return id, config_dict
     
     @synchronized
-    def put_todo_ids(self, id):
-        self.todo_ids.put(id)
+    def put_task_ids(self, id):
+        self.task_ids.put(id)
         logger.info(f"任务 {id} 重新入队")
         
     @synchronized
-    def update_todo_ids(self, id):
+    def update_task_ids(self, id):
         self.df.loc[id, 'run_num'] += 1
         self.df.to_excel(self.excel_path, index=False)
         logger.info(f"更新任务 {id} 运行次数: {self.df.loc[id, 'run_num']}")
 
-# todo_manager = TodoManager()
+# task_manager = TaskManager()
 
 if __name__ == "__main__":
     process_configs()
     # print(2)
-    # todo = TodoManager()
-    # print(todo.get_next_todo())
-    # print(todo.get_next_todo())
-    # todo.update_todo_ids(0)
+    # task = TaskManager()
+    # print(task.get_next_task())
+    # print(task.get_next_task())
+    # task.update_task_ids(0)
     # print(todo.get_next_todo())
     
     """

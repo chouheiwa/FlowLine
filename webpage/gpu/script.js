@@ -155,7 +155,7 @@ async function fetchProcessData() {
                 
                 taskData.push({
                     process_id: process_id,
-                    todo_id: process.todo_id,
+                    task_id: process.task_id,
                     pid: process.pid,
                     status: process.status.toLowerCase(),
                     gpu_id: process.gpu_id.toString(),
@@ -197,7 +197,7 @@ async function fetchGpuTasks(gpu_id) {
                 
                 tasks.push({
                     process_id: task_id,
-                    todo_id: task.todo_id,
+                    task_id: task.task_id,
                     pid: task.pid,
                     status: task.status.toLowerCase(),
                     gpu_id: task.gpu_id.toString(),
@@ -450,7 +450,7 @@ async function renderActiveTasks(gpu_id) {
                 <div class="task-info">
                     <div class="task-header">
                         <span class="task-id">${task.process_id}</span>
-                        <span class="task-todo-id">Todo:${task.todo_id}</span>
+                        <span class="task-task-id">Task:${task.task_id}</span>
                     </div>
                     <div class="task-command">${task.command}</div>
                 </div>
@@ -495,7 +495,7 @@ function renderProcessTable() {
             <td>${task.process_id}</td>
             <td><span class="process-status ${task.status}">${getStatusText(task.status)}</span></td>
             <td>${task.pid}</td>
-            <td>${task.todo_id}</td>
+            <td>${task.task_id}</td>
             <td>${task.gpu_id}</td>
             <td>${task.user}</td>
             <td>${task.startTime}</td>

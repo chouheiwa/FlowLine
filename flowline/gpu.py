@@ -62,7 +62,7 @@ class GPU:
         self.info_history.append(self.info)
         self.info_history = self.info_history[-self.info_history_length:]
         
-        logger.info(f"GPU: GPU {self.gpu_id} flashed") 
+        # logger.info(f"GPU: GPU {self.gpu_id} flashed") 
         if self.on_flash:
             self.on_flash(self.gpu_id, self.info)
         pynvml.nvmlShutdown()
@@ -128,7 +128,7 @@ class GPU_Manager:
                     elif info.utilization == gpu.info.utilization:
                         if info.free_memory > choose_gpu.info.free_memory:
                             choose_gpu = gpu
-        return choose_gpu.gpu_id
+        return choose_gpu.gpu_id if choose_gpu is not None else None
         
     @synchronized
     def turn_on_gpu(self, gpu_id):
