@@ -7,7 +7,6 @@ class Log:
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.INFO)
         
-        
         self.current_path = os.path.dirname(os.path.abspath(__file__))
         log_dir = os.path.join(self.current_path, 'log')
         

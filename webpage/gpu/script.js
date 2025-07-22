@@ -10,19 +10,14 @@ let selectedGpuId = null;
 
 // 设置刷新按钮点击事件
 document.getElementById('refreshBtn').addEventListener('click', function(e) {
-    // 防止页面刷新
     e.preventDefault();
-    console.log("刷新按钮被点击");
     fetchData();
-    // 显示刷新提示
     showToast('数据刷新成功');
 });
 
 // 设置运行按钮点击事件
 document.getElementById('runBtn').addEventListener('click', function(e) {
     e.preventDefault();
-    console.log("运行按钮被点击");
-    // 发送运行/停止请求
     fetch(`${API_BASE_URL}/run`, {
         method: 'POST',
         headers: {
@@ -40,7 +35,6 @@ document.getElementById('runBtn').addEventListener('click', function(e) {
         fetchData();
     })
     .catch(error => {
-        console.error('运行控制失败:', error);
         showToast(`运行控制失败: ${error.message}`, 5000);
     });
 });
@@ -54,9 +48,7 @@ fetchData();
 // 在 DOMContentLoaded 事件中初始化
 document.addEventListener('DOMContentLoaded', () => {
     console.log("页面已加载，开始初始化...");
-    // 初始加载数据
     fetchData();
-    
     // 设置周期性更新，降低频率（改为30秒一次）
     setInterval(fetchData, 10000);
 });
@@ -64,22 +56,20 @@ document.addEventListener('DOMContentLoaded', () => {
 // 获取所有数据
 async function fetchData() {
     try {
-        console.log("开始获取数据...");
+        //console.log("开始获取数据...");
         
         // 获取GPU数据
         await fetchGpuData();
-        console.log("GPU数据:", gpuData);
+        //console.log("GPU数据:", gpuData);
         
         // 获取进程数据
         await fetchProcessData();
-        console.log("进程数据:", taskData);
+        //console.log("进程数据:", taskData);
         
         // 渲染页面
         await renderUI();
-        console.log("UI渲染完成");
+        //console.log("UI渲染完成");
     } catch (error) {
-        console.error('获取数据失败:', error);
-        // 显示错误提示
         showToast(`获取数据失败: ${error.message}`, 5000);
         // 在页面上显示错误信息
         document.getElementById('gpuList').innerHTML = `<div class="error-message">获取数据失败: ${error.message}</div>`;
@@ -89,14 +79,11 @@ async function fetchData() {
 // 获取GPU数据
 async function fetchGpuData() {
     try {
-        console.log(`正在请求: ${API_BASE_URL}/gpus`);
         const response = await fetch(`${API_BASE_URL}/gpus`);
-        console.log('GPU数据响应状态:', response.status);
-        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const gpuObject = await response.json();
         
         // 处理新的API格式：把对象中的GPU数据转换为数组
@@ -126,7 +113,7 @@ async function fetchGpuData() {
         
         return gpuData;
     } catch (error) {
-        console.error('获取GPU数据失败:', error);
+        showToast(`获取GPU数据失败: ${error.message}`, 5000);
         throw error;
     }
 }
@@ -155,7 +142,7 @@ async function fetchProcessData() {
                 
                 taskData.push({
                     process_id: process_id,
-                    todo_id: process.todo_id,
+                    task_id: process.task_id,
                     pid: process.pid,
                     status: process.status.toLowerCase(),
                     gpu_id: process.gpu_id.toString(),
@@ -169,7 +156,7 @@ async function fetchProcessData() {
         
         return taskData;
     } catch (error) {
-        console.error('获取进程数据失败:', error);
+        showToast(`获取进程数据失败: ${error.message}`, 5000);
         throw error;
     }
 }
@@ -197,7 +184,7 @@ async function fetchGpuTasks(gpu_id) {
                 
                 tasks.push({
                     process_id: task_id,
-                    todo_id: task.todo_id,
+                    task_id: task.task_id,
                     pid: task.pid,
                     status: task.status.toLowerCase(),
                     gpu_id: task.gpu_id.toString(),
@@ -211,7 +198,7 @@ async function fetchGpuTasks(gpu_id) {
         
         return tasks;
     } catch (error) {
-        console.error(`获取GPU ${gpu_id} 的任务失败:`, error);
+        showToast(`获取GPU ${gpu_id} 的任务失败: ${error.message}`, 5000);
         return [];
     }
 }
@@ -233,8 +220,7 @@ async function killTask(process_id) {
         }
         return result.success;
     } catch (error) {
-        console.error(`终止任务 ${process_id} 失败:`, error);
-        showToast(`终止任务失败: ${error.message}`, 5000);
+        showToast(`终止任务 ${process_id} 失败: ${error.message}`, 5000);
         return false;
     }
 }
@@ -254,7 +240,6 @@ async function switchGpu(gpu_id) {
         }
         return result.is_on;
     } catch (error) {
-        console.error(`切换GPU ${gpu_id} 状态失败:`, error);
         showToast(`切换GPU状态失败: ${error.message}`, 5000);
         return null;
     }
@@ -289,10 +274,10 @@ async function renderUI() {
 
 // 渲染GPU列表
 function renderGpuList() {
-    console.log("开始渲染GPU列表...");
+    // console.log("开始渲染GPU列表...");
     const gpuListEl = document.querySelector('.gpu-list');
     if (!gpuListEl) {
-        console.error("找不到GPU列表元素！");
+        showToast("找不到GPU列表元素！");
         return;
     }
     
@@ -300,7 +285,7 @@ function renderGpuList() {
     
     // 检查gpuData是否为空
     if (!gpuData || gpuData.length === 0) {
-        console.warn("没有GPU数据可渲染");
+        showToast("没有GPU数据可渲染");
         gpuListEl.innerHTML = '<div class="no-data">没有可用的GPU数据</div>';
         return;
     }
@@ -371,16 +356,16 @@ function renderGpuList() {
 
 // 渲染GPU详情
 function renderGpuDetails(gpu) {
-    console.log("渲染GPU详情:", gpu);
+    //console.log("渲染GPU详情:", gpu);
     
     if (!gpu) {
-        console.error("GPU对象为空，无法渲染详情");
+        showToast("GPU对象为空，无法渲染详情");
         return;
     }
     
     const detailsEl = document.querySelector('.gpu-details .details-info');
     if (!detailsEl) {
-        console.error("找不到GPU详情元素");
+        showToast("找不到GPU详情元素");
         return;
     }
     
@@ -412,23 +397,23 @@ function renderGpuDetails(gpu) {
             </div>
         `;
     } catch (error) {
-        console.error("渲染GPU详情时出错:", error);
+        showToast(`渲染GPU详情时出错: ${error.message}`, 5000);
         detailsEl.innerHTML = '<div class="error">渲染GPU详情时出错</div>';
     }
 }
 
 // 渲染活跃任务
 async function renderActiveTasks(gpu_id) {
-    console.log("渲染活跃任务, GPU ID:", gpu_id);
+    //console.log("渲染活跃任务, GPU ID:", gpu_id);
     
     if (!gpu_id) {
-        console.error("GPU ID为空，无法渲染任务");
+        showToast("GPU ID为空，无法渲染任务");
         return;
     }
     
     const tasksEl = document.querySelector('.gpu-tasks .tasks-list');
     if (!tasksEl) {
-        console.error("找不到任务列表元素");
+        showToast("找不到任务列表元素");
         return;
     }
     
@@ -450,7 +435,7 @@ async function renderActiveTasks(gpu_id) {
                 <div class="task-info">
                     <div class="task-header">
                         <span class="task-id">${task.process_id}</span>
-                        <span class="task-todo-id">Todo:${task.todo_id}</span>
+                        <span class="task-task-id">Task:${task.task_id}</span>
                     </div>
                     <div class="task-command">${task.command}</div>
                 </div>
@@ -479,7 +464,7 @@ async function renderActiveTasks(gpu_id) {
             tasksEl.appendChild(taskCard);
         });
     } catch (error) {
-        console.error(`渲染GPU ${gpu_id} 任务时出错:`, error);
+        showToast(`渲染GPU ${gpu_id} 任务时出错: ${error}`);
         tasksEl.innerHTML = '<div class="error">获取任务数据失败</div>';
     }
 }
@@ -495,7 +480,7 @@ function renderProcessTable() {
             <td>${task.process_id}</td>
             <td><span class="process-status ${task.status}">${getStatusText(task.status)}</span></td>
             <td>${task.pid}</td>
-            <td>${task.todo_id}</td>
+            <td>${task.task_id}</td>
             <td>${task.gpu_id}</td>
             <td>${task.user}</td>
             <td>${task.startTime}</td>

@@ -15,10 +15,10 @@ socketio = SocketIO(app)
 
 program_manager = None
 
-def get_app(func):
+def get_app(func, task_dir=None):
     try:
         global program_manager
-        program_manager = ProgramManager(func, todo_dir="todo.xlsx")
+        program_manager = ProgramManager(func, task_dir)
         logger.info("ProgramManager initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize ProgramManager: {e}")
@@ -42,12 +42,19 @@ def get_processes():
     except Exception as e:
         logger.error(f"Error getting processes: {e}")
         return jsonify({'error': str(e)})
+    
+@app.route('/api/process/<process_id>/kill', methods=['POST'])
+def kill_process(process_id):
+    try:
+        if_success = program_manager.kill_process(int(process_id))
+        return jsonify({'success': if_success})
+    except Exception as e:
+        logger.error(f"Error killing process: {e}")
 
 @app.route('/api/gpu/<gpu_id>/process', methods=['GET'])
 def get_gpu_tasks(gpu_id):
     try:
-        gpu_id = int(gpu_id)
-        process_dict = program_manager.get_process_dict_by_gpu(gpu_id)
+        process_dict = program_manager.get_process_dict_by_gpu(int(gpu_id))
         return jsonify(process_dict)
     except Exception as e:
         logger.error(f"Error getting GPU tasks: {e}")
@@ -56,8 +63,7 @@ def get_gpu_tasks(gpu_id):
 @app.route('/api/gpu/<gpu_id>/switch', methods=['POST'])
 def switch_gpu(gpu_id):
     try:
-        gpu_id = int(gpu_id)
-        if_success, is_on = program_manager.switch_gpu(gpu_id)
+        if_success, is_on = program_manager.switch_gpu(int(gpu_id))
         return jsonify({'gpu_id': gpu_id, 'success': if_success, 'is_on': is_on})
     except Exception as e:
         logger.error(f"Error switching GPU: {e}")

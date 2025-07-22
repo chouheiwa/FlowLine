@@ -5,7 +5,7 @@ import os
 import logging
 
 def func(dict, gpu_id):
-    return "CUDA_VISIBLE_DEVICES="+str(gpu_id)+" python test.py "+ " ".join([f"--{k}={v}" for k, v in dict.items()])
+    return "CUDA_VISIBLE_DEVICES="+str(gpu_id)+" python -u test.py "+ " ".join([f"--{k}={v}" for k, v in dict.items()])
 
 def main():  # 前后端分离，前端使用python -m http.server 8000提供静态文件
     app = get_app(func)
