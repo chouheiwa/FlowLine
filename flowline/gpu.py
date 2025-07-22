@@ -97,9 +97,6 @@ class GPU_Manager:
                 return func(self, *args, **kwargs)
         return wrapper
     
-    def on_gpu_flash(self, gpu_id, info):
-        logger.info(f"GPU_Manager: GPU {gpu_id} flashed: {info}")
-    
     def update_user_process_num(self, gpu_id, pid, status):
         if status == "running":
             self.all_gpu[gpu_id].user_process_num += 1
@@ -128,15 +125,8 @@ class GPU_Manager:
                     elif info.utilization == gpu.info.utilization:
                         if info.free_memory > choose_gpu.info.free_memory:
                             choose_gpu = gpu
+        logger.info(f"GPU_Manager choose_gpu: {choose_gpu.gpu_id}")
         return choose_gpu.gpu_id if choose_gpu is not None else None
-        
-    @synchronized
-    def turn_on_gpu(self, gpu_id):
-        self.usable_mark[gpu_id] = True
-        
-    @synchronized
-    def turn_off_gpu(self, gpu_id):
-        self.usable_mark[gpu_id] = False
 
     @synchronized
     def switch_gpu(self, gpu_id):

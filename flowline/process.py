@@ -18,6 +18,12 @@ class ProcessStatus:
     def __str__(self):
         return self.name
     
+"""
+PENDING ─> RUNNING ─> COMPLETED √
+              ├─> KILLING ─> KILLED
+              └─> FAILED
+"""
+
 class Process:
     def __init__(self, process_id: int, fc: FunctionCall, task_id: int, gpu_id: int, on_status_changed=None):
         self.manager = multiprocessing.Manager()
@@ -39,7 +45,7 @@ class Process:
         
     def change_status(self, status: ProcessStatus):
         try:
-            logger.info(f"[ID {self.process_id}] [Task {self.task_id}] [GPU {self.gpu_id}] Change status from {self.shared_dict['status']} to {status}")
+            logger.info(f"[ID {self.process_id}] [Task {self.task_id}] [GPU {self.gpu_id}] Change status from '{self.shared_dict['status']}' to '{status}'")
             self.shared_dict["status"] = status
             if self.on_status_changed:
                 self.on_status_changed(self)
@@ -51,7 +57,6 @@ class Process:
         
     def run(self):
         try:
-            logger.info(f"[ID {self.process_id}] [Task {self.task_id}] [GPU {self.gpu_id}] Run (fc:{self.fc})")
             self._process = multiprocessing.Process(target=PopenProcess(self.result_queue, self.process_id).fcb, args=(self.fc(),))
             self._process.daemon = True
             self._process.start()
@@ -68,7 +73,8 @@ class Process:
             if success:
                 self.on_completed()
             else:
-                self.on_failed(result)
+                if self.get_status() != ProcessStatus.KILLED and self.get_status() != ProcessStatus.KILLING:
+                    self.on_failed(result)
         except Exception as e:
             logger.error(f"Process _wait_result: failed: {e}")
             
@@ -137,7 +143,7 @@ class ProcessManager:
         return len(self.processes) < self.max_processes
             
     def on_process_state(self, process):
-        logger.info(f"ProcessManager on_process_state: Process {process.process_id} status: {process.shared_dict['status']}")
+        # logger.info(f"ProcessManager on_process_state: Process {process.process_id} status: '{process.shared_dict['status']}'")
         if process.shared_dict['status'] in [ProcessStatus.COMPLETED, ProcessStatus.FAILED, ProcessStatus.KILLED]: 
             self.remove_process(process)
         if self.on_process_changed:
@@ -176,10 +182,11 @@ class ProcessManager:
                 target_process = process
                 break
         if target_process:
-            logger.info(f"ProcessManager: Terminate process ID {process_id}")
-            return target_process.kill()
+            success = target_process.kill()
+            logger.info(f"ProcessManager kill_process_by_id: Terminate process ID {process_id} {'success' if success else 'failed'}")
+            return success
         else:
-            logger.warning(f"ProcessManager: Process ID {process_id} not found")
+            logger.warning(f"ProcessManager kill_process_by_id: Process ID {process_id} not found")
             return False
             
     def kill_all_processes(self):

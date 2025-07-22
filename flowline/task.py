@@ -121,19 +121,19 @@ class TaskManager:
         id = self.task_ids.get()
         row = self.df.iloc[id]
         config_dict = row.drop('run_num').to_dict()
-        logger.info(f"获取任务 {id} 配置: {config_dict}")
+        logger.info(f"get task {id} config: {config_dict}")
         return id, config_dict
     
     @synchronized
     def put_task_ids(self, id):
         self.task_ids.put(id)
-        logger.info(f"任务 {id} 重新入队")
+        logger.info(f"put task {id} back to queue")
         
     @synchronized
     def update_task_ids(self, id):
         self.df.loc[id, 'run_num'] += 1
         self.df.to_excel(self.excel_path, index=False)
-        logger.info(f"更新任务 {id} 运行次数: {self.df.loc[id, 'run_num']}")
+        logger.info(f"update task {id} run times: {self.df.loc[id, 'run_num']}")
 
 # task_manager = TaskManager()
 

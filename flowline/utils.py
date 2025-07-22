@@ -37,8 +37,13 @@ class PopenProcess:
                 os.makedirs("log")
             
             with open(stdout_file, 'w', encoding='utf-8') as stdout_f, \
-                open(stderr_file, 'w', encoding='utf-8') as stderr_f:
-                self.popen_process = subprocess.Popen(cmd, stdout=stdout_f, stderr=stderr_f, shell=True)
+                 open(stderr_file, 'w', encoding='utf-8') as stderr_f:
+                self.popen_process = subprocess.Popen(
+                    cmd,
+                    stdout=stdout_f,
+                    stderr=stderr_f,
+                    shell=True,
+                )
                 self.popen_process.wait()
             
             _, stderr = self.popen_process.communicate()
@@ -63,18 +68,14 @@ class PopenProcess:
 if __name__ == "__main__":
     import multiprocessing
     import time
-    
-    def success():
-        print("success")
         
-    def error(error):
-        print(error)
-        
+    result_queue = multiprocessing.Queue()
+
     cmd_a = "CUDA_VISIBLE_DEVICES=4 python test.py --test a"
-    cmd_b = "CUDA_VISIBLE_DEVICES=5 python test.py --test b"
+    cmd_b = "CUDA_VISIBLE_DEVICES=5 python -u test.py --test b"
     
-    proc_a = multiprocessing.Process(target=PopenProcess(success_callback=success, error_callback=error).fcb, args=(cmd_a,))
-    proc_b = multiprocessing.Process(target=PopenProcess(success_callback=success, error_callback=error).fcb, args=(cmd_b,))
+    proc_a = multiprocessing.Process(target=PopenProcess(result_queue, 0).fcb, args=(cmd_a,))
+    proc_b = multiprocessing.Process(target=PopenProcess(result_queue, 1).fcb, args=(cmd_b,))
     
     proc_a.start()
     proc_b.start()
@@ -91,3 +92,7 @@ if __name__ == "__main__":
             print("proc_b is alive")
         else:
             print("proc_b is dead")
+        if result_queue.empty():
+            print("result_queue is empty")
+        else:
+            print("result_queue is not empty")
