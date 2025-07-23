@@ -1,7 +1,8 @@
 import pynvml
 import time
 import threading
-from .log import Log
+
+from flowline.utils import Log
 
 logger = Log(__name__)
 

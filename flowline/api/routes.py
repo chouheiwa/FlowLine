@@ -4,8 +4,8 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, send, emit
 
-from .program import ProgramManager
-from .log import Log
+from flowline.core import ProgramManager
+from flowline.utils import Log
 
 
 logger = Log(__name__)

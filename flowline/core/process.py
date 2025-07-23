@@ -2,8 +2,7 @@ import multiprocessing
 import time
 import threading
 
-from .log import Log
-from .utils import FunctionCall, PopenProcess
+from flowline.utils import FunctionCall, PopenProcess, Log
 
 logger = Log(__name__)
 

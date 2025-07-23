@@ -2,7 +2,7 @@ import cmd
 import sys
 import shutil
 
-from .program import ProgramManager
+from flowline.core import ProgramManager
 
 class CommandLineInterface(cmd.Cmd):
     intro = 'welcome to use task processing system. input help or ? to view help.\n'

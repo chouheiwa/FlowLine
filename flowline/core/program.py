@@ -8,13 +8,12 @@ import os
 from .gpu import GPU_Manager
 from .process import ProcessManager, ProcessStatus
 from .task import TaskManager
-from .log import Log
-from .utils import FunctionCall
+from flowline.utils import FunctionCall, Log
 
 logger = Log(__name__)
 
 class ProgramManager:
-    def __init__(self, func, task_dir=None):
+    def __init__(self, func, task_dir):
         self._lock = threading.Lock()
         self.gpu_manager = GPU_Manager(8, [4, 5], self.on_gpu_flash)
         self.process_manager = ProcessManager(self.on_process_changed)
