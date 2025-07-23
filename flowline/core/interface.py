@@ -53,9 +53,8 @@ class CommandLineInterface(cmd.Cmd):
     def do_ls(self, arg):
         """list all processes: ls"""
         dict = self.program_manager.get_process_dict()
-        max_processes = self.program_manager.get_max_processes()
         terminal_width = shutil.get_terminal_size().columns
-        print(f"now processes: {len(dict)}, max processes: {max_processes}")
+        print(f"now processes: {len(dict)}, max processes: {self.program_manager.get_max_processes()}")
         if len(dict) == 0:
             print("no running processes")
             return
@@ -75,6 +74,7 @@ class CommandLineInterface(cmd.Cmd):
         # self.program_manager.list_gpus()
         dict = self.program_manager.get_gpu_dict()
         terminal_width = shutil.get_terminal_size().columns
+        print(f"min process memory: {self.program_manager.get_min_process_memory()} MB")
         print("-" * 100)
         print(f"{'ID':<5} {'Status':<12} {'Util':<10} {'Free/Total(MB)':<18} {'Use/All':<10} {'Temp':<8} {'Power/Max(W)':<20}")
         print("-" * 100)
@@ -85,6 +85,14 @@ class CommandLineInterface(cmd.Cmd):
             power_str = f"{v['power']:>6}/{v['max_power']:<6}"
             print(f"{k:<5} {v['status']:<12} {util_str:<10} {memory_str:<18} {process_str:<10} {v['temperature']:<8} {power_str:<20}")
         print("-" * 100)
+
+    def do_min(self, arg):
+        """set the min process memory (MB): min <num>"""
+        try:
+            min_process_memory = int(arg.strip())
+            self.program_manager.set_min_process_memory(min_process_memory)
+        except ValueError:
+            print("error: min process memory must be a number")
         
     def do_exit(self, arg=None):
         """exit the program: exit"""

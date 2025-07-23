@@ -90,7 +90,7 @@ class GPU_Manager:
         for gpu_id in use_gpu_id:
             self.usable_mark[gpu_id] = True
         self.user_process_pid = []
-        self.min_process_memory = 10000
+        self.min_process_memory = 10000 # MB
         
     def synchronized(func):
         def wrapper(self, *args, **kwargs):
@@ -145,6 +145,11 @@ class GPU_Manager:
             gpu_dict[gpu.gpu_id] = dict
         return gpu_dict
                 
+    def set_min_process_memory(self, min_process_memory):
+        self.min_process_memory = min_process_memory
+
+    def get_min_process_memory(self):
+        return self.min_process_memory
                 
 # 示例使用
 # gpu_manager = GPU_Manager([0, 1, 2, 3, 4, 5, 6, 7])

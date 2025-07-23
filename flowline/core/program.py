@@ -125,6 +125,12 @@ class ProgramManager:
     def get_process_dict_by_gpu(self, gpu_id: int):
         return self.process_manager.get_process_dict_by_gpu(gpu_id)
         
+    def set_min_process_memory(self, min_process_memory):
+        self.gpu_manager.set_min_process_memory(min_process_memory)
+    
+    def get_min_process_memory(self):
+        return self.gpu_manager.get_min_process_memory()
+
     def get_gpu_dict(self):
         return self.gpu_manager.get_gpu_dict()
     
