@@ -7,8 +7,9 @@ class Log:
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.INFO)
         
-        self.current_path = os.path.dirname(os.path.abspath(__file__))
-        log_dir = os.path.join(self.current_path, 'log')
+        current_path = os.path.dirname(os.path.abspath(__file__))
+        parent_path = os.path.dirname(current_path)
+        log_dir = os.path.join(parent_path, 'log')
         
         # 尝试创建日志目录
         if not os.path.exists(log_dir):

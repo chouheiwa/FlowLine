@@ -1,10 +1,9 @@
+from .log import Log
+
 import signal
-import sys
 import psutil
 import subprocess
 import os
-
-from .log import Log
 
 logger = Log(__name__)
 

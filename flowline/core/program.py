@@ -8,15 +8,14 @@ import os
 from .gpu import GPU_Manager
 from .process import ProcessManager, ProcessStatus
 from .task import TaskManager
-from .log import Log
-from .utils import FunctionCall
+from flowline.utils import FunctionCall, Log
 
 logger = Log(__name__)
 
 class ProgramManager:
-    def __init__(self, func, task_dir=None):
+    def __init__(self, func, task_dir):
         self._lock = threading.Lock()
-        self.gpu_manager = GPU_Manager(8, [4, 5], self.on_gpu_flash)
+        self.gpu_manager = GPU_Manager([0], self.on_gpu_flash)
         self.process_manager = ProcessManager(self.on_process_changed)
         self.task_manager = TaskManager(task_dir)
         
@@ -126,6 +125,12 @@ class ProgramManager:
     def get_process_dict_by_gpu(self, gpu_id: int):
         return self.process_manager.get_process_dict_by_gpu(gpu_id)
         
+    def set_min_process_memory(self, min_process_memory):
+        self.gpu_manager.set_min_process_memory(min_process_memory)
+    
+    def get_min_process_memory(self):
+        return self.gpu_manager.get_min_process_memory()
+
     def get_gpu_dict(self):
         return self.gpu_manager.get_gpu_dict()
     

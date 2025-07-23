@@ -1,21 +1,18 @@
-from flowline.api import get_app
-from flask import send_from_directory, Flask, send_file, request, abort
+from flowline import get_app
 from flask_cors import CORS  # 添加CORS支持
-import os
-import logging
 
 def func(dict, gpu_id):
-    return "CUDA_VISIBLE_DEVICES="+str(gpu_id)+" python -u test.py "+ " ".join([f"--{k}={v}" for k, v in dict.items()])
+    return "CUDA_VISIBLE_DEVICES="+str(gpu_id)+" python -u test/test.py "+ " ".join([f"--{k}={v}" for k, v in dict.items()])
 
-def main():  # 前后端分离，前端使用python -m http.server 8000提供静态文件
-    app = get_app(func)
-    # 添加CORS支持，允许前端从不同端口访问API
+def main():
+    """前后端分离
+
+    仅提供API，不提供静态文件
+    前端静态文件需要通过单独的命令提供：
+    cd webpage && python -m http.server 8000
+    """
+    app = get_app(func, "test/todo.xlsx")
     CORS(app)
-    
-    # 仅提供API，不提供静态文件
-    # 前端静态文件需要通过单独的命令提供：
-    # cd webpage && python -m http.server 8000
-    
     app.run(host='0.0.0.0', port=5000, debug=True)
 
 def main2():

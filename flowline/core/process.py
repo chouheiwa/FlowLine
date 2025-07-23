@@ -2,8 +2,8 @@ import multiprocessing
 import time
 import threading
 
-from .log import Log
-from .utils import FunctionCall, PopenProcess
+from flowline.config import config
+from flowline.utils import FunctionCall, PopenProcess, Log
 
 logger = Log(__name__)
 
@@ -118,7 +118,7 @@ class ProcessManager:
         self.process_id_gen = self.id_generator()
         self.on_process_changed = on_process_changed
         
-        self.max_processes = 4
+        self.max_processes = config.DEFAULT_MAX_PROCESSES
         self.processes = []
         
     def synchronized(func):
