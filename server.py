@@ -7,16 +7,16 @@ def func(dict, gpu_id):
 def main():
     """前后端分离
 
-    仅提供API，不提供静态文件
+    仅提供API
     前端静态文件需要通过单独的命令提供：
-    cd webpage && python -m http.server 8000
+    cd web && python -m http.server 8000
     """
     app = get_app(func, "test/todo.xlsx")
     CORS(app)
     app.run(host='0.0.0.0', port=5000, debug=True)
 
 def main2():
-    # TODO: 集成式服务器，同时提供API和前端静态文件
+    # TODO: 集成式服务器，同时提供API和前端静态文件 
     pass
 
 if __name__ == '__main__':
