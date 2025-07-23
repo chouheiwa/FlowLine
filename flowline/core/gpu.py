@@ -2,9 +2,11 @@ import pynvml
 import time
 import threading
 
+from flowline.config import config
 from flowline.utils import Log
 
 logger = Log(__name__)
+
 
 class GPU_info:
     def __init__(self, free_memory, total_memory, utilization, all_process_num, name, temperature, power, max_power):
@@ -82,15 +84,21 @@ class GPU:
     def get_dict(self):
         return self.info.to_dict()
     
+def get_gpu_count():
+    pynvml.nvmlInit()
+    gpu_count = pynvml.nvmlDeviceGetCount()
+    pynvml.nvmlShutdown()
+    return gpu_count
+    
 class GPU_Manager:
-    def __init__(self, all_gpu_num, use_gpu_id: list, on_flash=None):
+    def __init__(self, use_gpu_id: list, on_flash=None):
         self._lock = threading.Lock()
-        self.all_gpu = [GPU(i, on_flash) for i in range(all_gpu_num)]
+        self.all_gpu = [GPU(i, on_flash) for i in range(get_gpu_count())]
         self.usable_mark = [False] * len(self.all_gpu)
         for gpu_id in use_gpu_id:
             self.usable_mark[gpu_id] = True
         self.user_process_pid = []
-        self.min_process_memory = 10000 # MB
+        self.min_process_memory = config.DEFAULT_MIN_PROCESS_MEMORY
         
     def synchronized(func):
         def wrapper(self, *args, **kwargs):
@@ -155,5 +163,5 @@ class GPU_Manager:
 # gpu_manager = GPU_Manager([0, 1, 2, 3, 4, 5, 6, 7])
 
 if __name__ == "__main__":
-    gpu_manager = GPU_Manager(8, [0, 1, 2])
+    gpu_manager = GPU_Manager([0, 1, 2])
     print(gpu_manager.choose_gpu())

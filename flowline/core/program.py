@@ -15,7 +15,7 @@ logger = Log(__name__)
 class ProgramManager:
     def __init__(self, func, task_dir):
         self._lock = threading.Lock()
-        self.gpu_manager = GPU_Manager(8, [4, 5], self.on_gpu_flash)
+        self.gpu_manager = GPU_Manager([0], self.on_gpu_flash)
         self.process_manager = ProcessManager(self.on_process_changed)
         self.task_manager = TaskManager(task_dir)
         

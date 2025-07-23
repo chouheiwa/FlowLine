@@ -1,4 +1,4 @@
-from flowline.api import get_app
+from flowline import get_app
 from flask_cors import CORS  # 添加CORS支持
 
 def func(dict, gpu_id):
