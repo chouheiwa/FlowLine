@@ -22,7 +22,6 @@ class Log:
         file_handler.setFormatter(formatter)
         self.logger.addHandler(file_handler)
  
-        
     def info(self, message):
         self.logger.info(message)
         
