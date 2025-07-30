@@ -13,7 +13,7 @@ from flowline.utils import FunctionCall, Log
 logger = Log(__name__)
 
 class ProgramManager:
-    def __init__(self, func, task_dir):
+    def __init__(self, user_func, task_dir):
         self._lock = threading.Lock()
         self.gpu_manager = GPU_Manager([0], self.on_gpu_flash)
         self.process_manager = ProcessManager(self.on_process_changed)
@@ -21,7 +21,7 @@ class ProgramManager:
         
         self.if_run = False
         self._main_thread = None 
-        self.func = func
+        self.func = user_func
         
     ##################### lock #####################
         
@@ -65,7 +65,8 @@ class ProgramManager:
         if task_id is None:
             logger.info("no task to handle")
             return
-        if self.process_manager.add_process(FunctionCall(self.func, dict, gpu_id), task_id, gpu_id) is None:
+        cmd = self.func(dict, gpu_id)
+        if self.process_manager.add_process(cmd, task_id, gpu_id) is None:
             self.task_manager.put_task_ids(task_id)
             logger.info(f"failed to create process, task {task_id} put back to queue")
         

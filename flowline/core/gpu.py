@@ -84,6 +84,9 @@ class GPU:
     def get_dict(self):
         return self.info.to_dict()
     
+    def __str__(self) -> str:
+        return f"GPU:{self.gpu_id}"
+    
 def get_gpu_count():
     pynvml.nvmlInit()
     gpu_count = pynvml.nvmlDeviceGetCount()
@@ -134,7 +137,7 @@ class GPU_Manager:
                     elif info.utilization == gpu.info.utilization:
                         if info.free_memory > choose_gpu.info.free_memory:
                             choose_gpu = gpu
-        logger.info(f"GPU_Manager choose_gpu: {choose_gpu.gpu_id}")
+        logger.info(f"GPU_Manager choose_gpu: {choose_gpu}")
         return choose_gpu.gpu_id if choose_gpu is not None else None
 
     @synchronized

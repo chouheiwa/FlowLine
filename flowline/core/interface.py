@@ -115,15 +115,19 @@ class CommandLineInterface(cmd.Cmd):
         """list the task: task"""
         tasks = self.program_manager.get_task_dict()
         max_show_num = 5
-        print(f"task num: {len(tasks)}")
         if len(tasks) == 0:
             print("no task")
             return
+        print(f"Pending task num: {len(tasks)}")
+        print("-" * 100)
+        print(f"{'Task_ID':<8} {'Name':<12} {'run_num':<8} {'Dict':<20}")
+        print("-" * 100)
         for k, v in enumerate(tasks):
             if k >= max_show_num:
                 print(f"...")
                 break
-            print(f"task id: {k}, config: {v}")
+            print(f"{v['task_id']:<8} {v['name']:<12} {v['run_num']:<8} {v['dict']:<20}")
+        print("-" * 100)
 
 def run_cli(func, task_dir=None):
     """run the command line interface"""
