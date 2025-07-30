@@ -59,14 +59,14 @@ class CommandLineInterface(cmd.Cmd):
             print("no running processes")
             return
         print("-" * 130)
-        print(f"{'ProcID':<8} {'PID':<8} {'TaskID':<8} {'GPUID':<8} {'Status':<8} {'Func':<100}")
+        print(f"{'ProcID':<8} {'PID':<8} {'TaskID':<8} {'GPUID':<8} {'Status':<8} {'Cmd':<100}")
         print("-" * 130)
         for k, v in dict.items():
-            print(f"{k:<8} {v['pid']:<8} {v['task_id']:<8} {v['gpu_id']:<8} {v['status']:<8} {v['func'][:80]}")
-            while len(v['func']) > 80:
+            print(f"{k:<8} {v['pid']:<8} {v['task_id']:<8} {v['gpu_id']:<8} {v['status']:<8} {v['cmd'][:80]}")
+            while len(v['cmd']) > 80:
                 print(" "*45, end="")
-                v['func'] = v['func'][80:]
-                print(v['func'][:80])
+                v['cmd'] = v['cmd'][80:]
+                print(v['cmd'][:80])
         print("-" * 130)
         
     def do_gpus(self, arg):
@@ -115,15 +115,19 @@ class CommandLineInterface(cmd.Cmd):
         """list the task: task"""
         tasks = self.program_manager.get_task_dict()
         max_show_num = 5
-        print(f"task num: {len(tasks)}")
         if len(tasks) == 0:
             print("no task")
             return
+        print(f"Pending task num: {len(tasks)}")
+        print("-" * 100)
+        print(f"{'Task_ID':<8} {'Name':<12} {'run_num':<8} {'Dict':<20}")
+        print("-" * 100)
         for k, v in enumerate(tasks):
             if k >= max_show_num:
                 print(f"...")
                 break
-            print(f"task id: {k}, config: {v}")
+            print(f"{v['task_id']:<8} {v['name']:<12} {v['run_num']:<8} {v['dict']:<20}")
+        print("-" * 100)
 
 def run_cli(func, task_dir=None):
     """run the command line interface"""

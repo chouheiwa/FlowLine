@@ -25,14 +25,14 @@ PENDING ─> RUNNING ─> COMPLETED √
 """
 
 class Process:
-    def __init__(self, process_id: int, fc: FunctionCall, task_id: int, gpu_id: int, on_status_changed=None):
+    def __init__(self, process_id: int, cmd: str, task_id: int, gpu_id: int, on_status_changed=None):
         self.manager = multiprocessing.Manager()
         self.shared_dict = self.manager.dict()
         self.shared_dict["status"] = ProcessStatus.PENDING
         self.on_status_changed = on_status_changed
         
         self.process_id = process_id
-        self.fc = fc 
+        self.cmd = cmd
         self.task_id = task_id
         self.gpu_id = gpu_id
         self.start_time = time.time()
@@ -57,7 +57,7 @@ class Process:
         
     def run(self):
         try:
-            self._process = multiprocessing.Process(target=PopenProcess(self.result_queue, self.process_id).fcb, args=(self.fc(),))
+            self._process = multiprocessing.Process(target=PopenProcess(self.result_queue, self.process_id).fcb, args=(self.cmd,))
             self._process.daemon = True
             self._process.start()
             self.change_status(ProcessStatus.RUNNING)
@@ -109,7 +109,7 @@ class Process:
             "gpu_id": self.gpu_id,
             "start_time": self.start_time,
             "status": self.get_status(),
-            "func": str(self.fc)
+            "cmd": self.cmd
         }
             
 class ProcessManager:
@@ -154,12 +154,12 @@ class ProcessManager:
         self.processes.remove(process)
         
     @synchronized
-    def add_process(self, fc: FunctionCall, task_id: int, gpu_id: int):
+    def add_process(self, cmd: str, task_id: int, gpu_id: int):
         try:
             if not self.have_space():
                 logger.warning(f"ProcessManager: Process number exceeds the maximum limit {self.max_processes}")
                 return None
-            process = Process(next(self.process_id_gen), fc, task_id, gpu_id, self.on_process_state)
+            process = Process(next(self.process_id_gen), cmd, task_id, gpu_id, self.on_process_state)
             self.processes.append(process)
             return True
         except Exception as e:
@@ -214,8 +214,8 @@ if __name__ == "__main__":
     
     process_manager = ProcessManager(on_completed)
     
-    process_manager.add_process(fc1, 1, 4)
-    # process_manager.add_process(fc2, 2, 4)
+    process_manager.add_process(fc1(), 1, 4)
+    # process_manager.add_process(fc2(), 2, 4)
     
     # time.sleep(5)
     

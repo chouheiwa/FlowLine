@@ -6,52 +6,94 @@ from flowline.utils import Log
 
 logger = Log(__name__)
 
-def read_configs(excel_path):
-    """
-    Read the configuration parameters from the Excel file.
-    """
-    logger.info(f"读取配置文件: {excel_path}")
-    df = pd.read_excel(excel_path)
-    return df
 
+class TaskStatus:
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+
+class Task:
+    def __init__(self, task_id, dict, run_num, need_run_num, name, cmd):
+        self.task_id = task_id
+        self.dict = dict
+        self.run_num = run_num
+        self.need_run_num = need_run_num
+        self.name = name
+        self.cmd = cmd
+        self.state = TaskStatus.PENDING if self.run_num < self.need_run_num else TaskStatus.COMPLETED
+
+    def __str__(self) -> str:
+        return f"Task:{self.task_id}"
+    
+    def get_dict(self) -> dict:
+        return {
+            "task_id": self.task_id,
+            "dict": str(self.dict),
+            "run_num": self.run_num,
+            "need_run_num": self.need_run_num,
+            "name": self.name,
+            "cmd": self.cmd,
+            "status": self.state,
+        }
 
 class TaskManager:
+    """
+    excel的保留关键字(属性): run_num, need_run_num, name, cmd
+    """
     def __init__(self, excel_path):
         self._lock = threading.Lock()
         self.excel_path = excel_path
-        self.df = read_configs(excel_path)
-        self.df.to_excel(excel_path, index=False)
+        logger.info(f"读取配置文件: {excel_path}")
+        self.df = pd.read_excel(excel_path)
+        self.format_tidy_df()
+        self.df.to_excel(excel_path, index=False)   
+
+        self.tasks = []
+        for idx, row in self.df.iloc[:].iterrows():
+            config_dict = row.drop('run_num').to_dict()
+            self.tasks.append(Task(idx, config_dict, row['run_num'], row['need_run_num'], row['name'], row['cmd']))
+
         self.task_ids = queue.PriorityQueue()
         for id in self.get_task_ids():
             self.task_ids.put(id)
 
+    def format_tidy_df(self):
+        if 'run_num' not in self.df.columns:
+            self.df['run_num'] = 0
+        if 'need_run_num' not in self.df.columns:
+            self.df['need_run_num'] = 1
+        if 'name' not in self.df.columns:
+            self.df['name'] = ['Task:' + str(i) for i in self.df.index]
+        if 'cmd' not in self.df.columns:
+            self.df['cmd'] = 'No command'
+ 
     def synchronized(func):
         def wrapper(self, *args, **kwargs):
             with self._lock:
                 return func(self, *args, **kwargs)
         return wrapper
 
-    def get_task_configs(self):
-        return self.df[self.df['run_num']==0]
-
     def get_task_ids(self):
-        todo_df = self.get_task_configs()
+        todo_df = self.df[self.df['run_num']==0]
         return list(todo_df.index)
     
     # -------------------------------
     
     def get_task_dict(self):
-        return self.get_task_configs().to_dict(orient='records')
+        list = []
+        for task in self.tasks:
+            if task.run_num == 0:
+                list.append(task.get_dict())
+        return list
     
     @synchronized
     def get_next_task(self) -> tuple[int, dict]:
         if self.task_ids.empty():
             return None, None
         id = self.task_ids.get()
-        row = self.df.iloc[id]
-        config_dict = row.drop('run_num').to_dict()
-        logger.info(f"get task {id} config: {config_dict}")
-        return id, config_dict
+        dict = self.tasks[id].dict
+        logger.info(f"get task {id} config: {dict}")
+        return id, dict
     
     @synchronized
     def put_task_ids(self, id):
@@ -60,9 +102,14 @@ class TaskManager:
         
     @synchronized
     def update_task_ids(self, id):
+        self.tasks[id].run_num += 1
         self.df.loc[id, 'run_num'] += 1
         self.df.to_excel(self.excel_path, index=False)
         logger.info(f"update task {id} run times: {self.df.loc[id, 'run_num']}")
+
+    @synchronized
+    def create_task(self, name, cmd):
+        return True
 
 # task_manager = TaskManager()
 
