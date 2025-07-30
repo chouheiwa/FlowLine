@@ -7,12 +7,19 @@ from flowline.utils import Log
 logger = Log(__name__)
 
 
+class TaskStatus:
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+
 class Task:
     def __init__(self, task_id, dict, run_num, name=None):
         self.task_id = task_id
         self.dict = dict
         self.run_num = run_num
+        self.need_run_num = 1
         self.name = f"Task:{task_id}" if name is None else name
+        self.state = TaskStatus.PENDING if self.run_num < self.need_run_num else TaskStatus.COMPLETED
 
     def __str__(self) -> str:
         return f"Task:{self.task_id}"
@@ -22,7 +29,9 @@ class Task:
             "task_id": self.task_id,
             "dict": str(self.dict),
             "run_num": self.run_num,
-            "name": self.name
+            "name": self.name,
+            "status": self.state,
+            "need_run_num": self.need_run_num
         }
 
 class TaskManager:
@@ -82,6 +91,10 @@ class TaskManager:
         self.df.loc[id, 'run_num'] += 1
         self.df.to_excel(self.excel_path, index=False)
         logger.info(f"update task {id} run times: {self.df.loc[id, 'run_num']}")
+
+    @synchronized
+    def create_task(self, name, cmd):
+        return True
 
 # task_manager = TaskManager()
 

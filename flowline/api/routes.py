@@ -80,6 +80,24 @@ def run_process_loop():
         logger.error(f"Error starting process loop: {e}")
         return jsonify({'if_run': str(e)})
 
+@app.route('/api/task/list', methods=['GET'])
+def get_task_list():
+    try:
+        task_dict = program_manager.get_task_dict()
+        return jsonify(task_dict)
+    except Exception as e:
+        logger.error(f"Error getting tasks: {e}")
+        return jsonify({'error': str(e)})
+    
+@app.route('/api/task/create', methods=['POST'])
+def create_task():
+    try:
+        if_success = program_manager.create_task(request.json)
+        return jsonify({'success': if_success})
+    except Exception as e:
+        logger.error(f"Error creating task: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/api/log/list', methods=['GET'])
 def log_file_list():
     try:
@@ -204,7 +222,7 @@ curl -X POST http://127.0.0.1:5000/api/run
 
 curl http://127.0.0.1:5000/api/process
 curl http://127.0.0.1:5000/api/gpus
-
+curl http://127.0.0.1:5000/api/task/list
 
 curl http://127.0.0.1:5000/api/log/flowline.core.program.log?maxLines=1000
 """

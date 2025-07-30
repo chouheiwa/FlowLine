@@ -59,14 +59,14 @@ class CommandLineInterface(cmd.Cmd):
             print("no running processes")
             return
         print("-" * 130)
-        print(f"{'ProcID':<8} {'PID':<8} {'TaskID':<8} {'GPUID':<8} {'Status':<8} {'Func':<100}")
+        print(f"{'ProcID':<8} {'PID':<8} {'TaskID':<8} {'GPUID':<8} {'Status':<8} {'Cmd':<100}")
         print("-" * 130)
         for k, v in dict.items():
-            print(f"{k:<8} {v['pid']:<8} {v['task_id']:<8} {v['gpu_id']:<8} {v['status']:<8} {v['func'][:80]}")
-            while len(v['func']) > 80:
+            print(f"{k:<8} {v['pid']:<8} {v['task_id']:<8} {v['gpu_id']:<8} {v['status']:<8} {v['cmd'][:80]}")
+            while len(v['cmd']) > 80:
                 print(" "*45, end="")
-                v['func'] = v['func'][80:]
-                print(v['func'][:80])
+                v['cmd'] = v['cmd'][80:]
+                print(v['cmd'][:80])
         print("-" * 130)
         
     def do_gpus(self, arg):

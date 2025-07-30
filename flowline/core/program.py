@@ -138,6 +138,9 @@ class ProgramManager:
     def get_task_dict(self):
         return self.task_manager.get_task_dict()
 
+    def create_task(self, task_dict):
+        return self.task_manager.create_task(task_dict)
+
 if __name__ == "__main__":
     def func(dict, gpu_id):
         import torch

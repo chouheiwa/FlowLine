@@ -109,7 +109,7 @@ class Process:
             "gpu_id": self.gpu_id,
             "start_time": self.start_time,
             "status": self.get_status(),
-            "func": self.cmd
+            "cmd": self.cmd
         }
             
 class ProcessManager:

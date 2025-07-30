@@ -1,3 +1,6 @@
+// API URL
+const API_BASE_URL = 'http://localhost:5000/api';
+
 // 全局变量
 let tasks = [];
 let selectedCategory = 'all';
@@ -22,9 +25,8 @@ const toastMessage = document.querySelector('.toast-message');
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
-    // 加载任务和GPU数据
+    // 加载任务
     loadTasks();
-    loadGpus();
     
     // 绑定事件
     bindEvents();
@@ -47,7 +49,6 @@ function bindEvents() {
     // 刷新按钮
     refreshBtn.addEventListener('click', () => {
         loadTasks();
-        loadGpus();
         showToast('数据已刷新');
     });
     
@@ -61,103 +62,15 @@ function bindEvents() {
 }
 
 // 加载任务数据
-function loadTasks() {
-    // 模拟API请求获取任务数据
-    setTimeout(() => {
-        // 这里应该是实际的API调用
-        // fetch('/api/tasks').then(response => response.json()).then(data => {...})
-        
-        // 示例数据
-        tasks = [
-            { 
-                id: 'task_001', 
-                name: '样例训练任务', 
-                command: 'python train.py --model resnet50 --epochs 100', 
-                status: 'running', 
-                gpu: 'RTX 4090', 
-                startTime: '2023-08-15 10:30:45', 
-                progress: 45 
-            },
-            { 
-                id: 'task_002', 
-                name: '图像分类任务', 
-                command: 'python classify.py --input images/ --output results/', 
-                status: 'completed', 
-                gpu: 'RTX 3080', 
-                startTime: '2023-08-14 09:15:30', 
-                endTime: '2023-08-14 12:45:22' 
-            },
-            { 
-                id: 'task_003', 
-                name: '数据处理任务', 
-                command: 'python preprocess.py --data raw_data/ --clean', 
-                status: 'failed', 
-                gpu: 'RTX 4090', 
-                startTime: '2023-08-15 08:10:15', 
-                endTime: '2023-08-15 08:15:42',
-                error: '内存不足'
-            },
-            { 
-                id: 'task_004', 
-                name: '模型评估', 
-                command: 'python evaluate.py --model model.pth --test test_data/', 
-                status: 'pending', 
-                gpu: 'RTX 3080', 
-                createTime: '2023-08-15 13:05:10' 
-            },
-            { 
-                id: 'task_005', 
-                name: '已终止任务', 
-                command: 'python long_process.py', 
-                status: 'killed', 
-                gpu: 'RTX 4090', 
-                startTime: '2023-08-13 14:30:00', 
-                endTime: '2023-08-13 14:45:12' 
-            }
-        ];
-        
-        updateTaskCounts();
-        renderTasks();
-    }, 300);
-}
+async function loadTasks() {
+    const response = await fetch(`${API_BASE_URL}/task/list`)
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    tasks = await response.json()
 
-// 加载GPU数据
-function loadGpus() {
-    // 模拟API请求获取GPU数据
-    setTimeout(() => {
-        // 这里应该是实际的API调用
-        // fetch('/api/gpus').then(response => response.json()).then(data => {...})
-        
-        // 示例GPU数据
-        gpus = [
-            { id: 'gpu_001', name: 'RTX 4090', status: 'available' },
-            { id: 'gpu_002', name: 'RTX 3080', status: 'busy' }
-        ];
-        
-        renderGpuOptions();
-    }, 300);
-}
-
-// 渲染GPU选项
-function renderGpuOptions() {
-    taskGpuSelect.innerHTML = '';
-    
-    // 添加默认选项
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = '选择一个GPU';
-    defaultOption.disabled = true;
-    defaultOption.selected = true;
-    taskGpuSelect.appendChild(defaultOption);
-    
-    // 添加GPU选项
-    gpus.forEach(gpu => {
-        const option = document.createElement('option');
-        option.value = gpu.id;
-        option.textContent = `${gpu.name} (${gpu.status === 'available' ? '可用' : '忙碌'})`;
-        option.disabled = gpu.status !== 'available';
-        taskGpuSelect.appendChild(option);
-    });
+    updateTaskCounts();
+    renderTasks();
 }
 
 // 更新任务计数
@@ -227,31 +140,32 @@ function renderTasks() {
         taskCard.dataset.id = task.id;
         
         const statusLabel = {
-            running: '运行中',
-            pending: '等待中',
-            completed: '已完成',
-            failed: '失败',
+            PENDING: '等待中',
+            RUNNING: '运行中',
+            COMPLETED: '已完成',
+            FAILED: '失败',
             killed: '已终止'
         };
         
         taskCard.innerHTML = `
             <div class="task-header">
                 <div class="task-id">${task.name}</div>
-                <div class="task-status ${task.status}"></div>
+                <div class="task-status ${task.status.toLowerCase()}"></div>
             </div>
             <div class="task-info">
-                <div>状态: <span>${statusLabel[task.status]}</span></div>
-                <div>GPU: <span>${task.gpu}</span></div>
-                <div>命令:</div>
-                <div class="task-command">${task.command}</div>
+                <div>任务ID：<span>${task.task_id}</span></div>
+                <div>状态：<span>${statusLabel[task.status]}</span></div>
+                <div>运行：<span>${task.run_num}/${task.need_run_num}</span></div>
+                <div>字典：</div>
+                <div class="task-command">${task.dict}</div>
                 ${task.progress ? `<div>进度: <span>${task.progress}%</span></div>` : ''}
                 ${task.startTime ? `<div>开始时间: <span>${task.startTime}</span></div>` : ''}
                 ${task.endTime ? `<div>结束时间: <span>${task.endTime}</span></div>` : ''}
                 ${task.error ? `<div>错误: <span>${task.error}</span></div>` : ''}
             </div>
             <div class="task-actions">
-                <button class="view-detail" data-id="${task.id}">查看详情</button>
-                ${task.status === 'running' ? `<button class="kill" data-id="${task.id}">终止</button>` : ''}
+                <button class="view-detail" data-id="${task.task_id}">查看详情</button>
+                ${task.status === 'running' ? `<button class="kill" data-id="${task.task_id}">终止</button>` : ''}
             </div>
         `;
         
@@ -285,17 +199,17 @@ function bindTaskCardEvents() {
 
 // 显示任务详情
 function showTaskDetail(taskId) {
-    const task = tasks.find(t => t.id === taskId);
+    const task = tasks.find(t => t.task_id == taskId);
     if (!task) return;
     
     taskDetailTitle.textContent = `任务详情: ${task.name}`;
     
     const statusLabel = {
-        running: '运行中',
-        pending: '等待中',
-        completed: '已完成',
-        failed: '失败',
-        killed: '已终止'
+        RUNNING: '运行中',
+        PENDING: '等待中',
+        COMPLETED: '已完成',
+        FAILED: '失败',
+        KILLED: '已终止'
     };
     
     taskDetailContent.innerHTML = `
@@ -303,7 +217,7 @@ function showTaskDetail(taskId) {
             <h3>基本信息</h3>
             <div class="detail-item">
                 <span class="detail-label">任务ID:</span>
-                <span class="detail-value">${task.id}</span>
+                <span class="detail-value">${task.task_id}</span>
             </div>
             <div class="detail-item">
                 <span class="detail-label">名称:</span>
@@ -311,18 +225,16 @@ function showTaskDetail(taskId) {
             </div>
             <div class="detail-item">
                 <span class="detail-label">状态:</span>
-                <span class="detail-value status-${task.status}">${statusLabel[task.status]}</span>
+                <span class="detail-value status-${task.status.toLowerCase()}">${statusLabel[task.status]}</span>
             </div>
             <div class="detail-item">
-                <span class="detail-label">GPU:</span>
-                <span class="detail-value">${task.gpu}</span>
+                <span class="detail-label">运行次数:</span>
+                <span class="detail-value">${task.run_num}/${task.need_run_num}</span>
             </div>
-            ${task.progress ? `
             <div class="detail-item">
-                <span class="detail-label">进度:</span>
-                <span class="detail-value">${task.progress}%</span>
+                <span class="detail-label">字典:</span>
+                <span class="detail-value">${task.dict}</span>
             </div>
-            ` : ''}
             ${task.startTime ? `
             <div class="detail-item">
                 <span class="detail-label">开始时间:</span>
@@ -360,10 +272,9 @@ function showTaskDetail(taskId) {
 }
 
 // 创建任务
-function createTask() {
+async function createTask() {
     const name = taskNameInput.value.trim();
     const command = taskCommandInput.value.trim();
-    const gpuId = taskGpuSelect.value;
     
     // 验证输入
     if (!name) {
@@ -374,45 +285,29 @@ function createTask() {
         showToast('请输入任务命令');
         return;
     }
-    if (!gpuId) {
-        showToast('请选择GPU');
-        return;
+    
+    const response = await fetch(`${API_BASE_URL}/task/create`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, command })
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
-    // 获取选中的GPU
-    const selectedGpu = gpus.find(gpu => gpu.id === gpuId);
-    
-    // 模拟API请求创建任务
-    // 实际应该是 fetch('/api/tasks', { method: 'POST', body: JSON.stringify({...}) })
-    
-    // 模拟创建任务
-    const newTask = {
-        id: `task_${Date.now()}`,
-        name: name,
-        command: command,
-        status: 'pending',
-        gpu: selectedGpu.name,
-        createTime: new Date().toLocaleString()
-    };
-    
-    // 添加到任务列表
-    tasks.unshift(newTask);
-    
-    // 更新UI
-    updateTaskCounts();
-    
-    // 如果当前显示的是所有任务或待处理任务，则重新渲染
-    if (selectedCategory === 'all' || selectedCategory === 'pending') {
+    const result = await response.json();
+    if (result.success) {
+        showToast(result.error);   
+    }else{
         renderTasks();
+
+        taskNameInput.value = '';
+        taskCommandInput.value = '';
+        
+        showToast('任务已创建');
     }
-    
-    // 清空表单
-    taskNameInput.value = '';
-    taskCommandInput.value = '';
-    taskGpuSelect.value = '';
-    
-    // 显示提示
-    showToast('任务已创建');
+
 }
 
 // 终止任务

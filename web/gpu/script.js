@@ -1,5 +1,4 @@
-// API URL - 需要根据实际部署环境修改
-// const API_BASE_URL = '/api';
+// API URL
 const API_BASE_URL = 'http://localhost:5000/api';
 
 // 用于存储数据的变量
