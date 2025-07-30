@@ -13,12 +13,13 @@ class TaskStatus:
     COMPLETED = "COMPLETED"
 
 class Task:
-    def __init__(self, task_id, dict, run_num, name=None):
+    def __init__(self, task_id, dict, run_num, need_run_num, name, cmd):
         self.task_id = task_id
         self.dict = dict
         self.run_num = run_num
-        self.need_run_num = 1
-        self.name = f"Task:{task_id}" if name is None else name
+        self.need_run_num = need_run_num
+        self.name = name
+        self.cmd = cmd
         self.state = TaskStatus.PENDING if self.run_num < self.need_run_num else TaskStatus.COMPLETED
 
     def __str__(self) -> str:
@@ -29,29 +30,43 @@ class Task:
             "task_id": self.task_id,
             "dict": str(self.dict),
             "run_num": self.run_num,
+            "need_run_num": self.need_run_num,
             "name": self.name,
+            "cmd": self.cmd,
             "status": self.state,
-            "need_run_num": self.need_run_num
         }
 
 class TaskManager:
+    """
+    excel的保留关键字(属性): run_num, need_run_num, name, cmd
+    """
     def __init__(self, excel_path):
         self._lock = threading.Lock()
         self.excel_path = excel_path
         logger.info(f"读取配置文件: {excel_path}")
         self.df = pd.read_excel(excel_path)
-        self.df.to_excel(excel_path, index=False)
+        self.format_tidy_df()
+        self.df.to_excel(excel_path, index=False)   
 
         self.tasks = []
         for idx, row in self.df.iloc[:].iterrows():
             config_dict = row.drop('run_num').to_dict()
-            run_num = row['run_num']
-            self.tasks.append(Task(idx, config_dict, run_num))
+            self.tasks.append(Task(idx, config_dict, row['run_num'], row['need_run_num'], row['name'], row['cmd']))
 
         self.task_ids = queue.PriorityQueue()
         for id in self.get_task_ids():
             self.task_ids.put(id)
 
+    def format_tidy_df(self):
+        if 'run_num' not in self.df.columns:
+            self.df['run_num'] = 0
+        if 'need_run_num' not in self.df.columns:
+            self.df['need_run_num'] = 1
+        if 'name' not in self.df.columns:
+            self.df['name'] = ['Task:' + str(i) for i in self.df.index]
+        if 'cmd' not in self.df.columns:
+            self.df['cmd'] = 'No command'
+ 
     def synchronized(func):
         def wrapper(self, *args, **kwargs):
             with self._lock:

@@ -8,7 +8,7 @@ let filteredContent = [];
 let searchTerm = '';
 let selectedLogLevel = 'all';
 let maxLines = 1000;
-let autoScroll = false;
+let autoScroll = true;
 let pollingInterval = null;
 
 // DOM 元素
@@ -107,7 +107,6 @@ async function loadLogFiles() {
     }
     const data = await response.json();
     logFiles = data.files;    
-    // console.log(logFiles);
     renderLogFiles();
 }
 

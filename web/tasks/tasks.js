@@ -257,7 +257,7 @@ function showTaskDetail(taskId) {
         
         <div class="detail-section">
             <h3>命令</h3>
-            <div class="task-command">${task.command}</div>
+            <div class="task-command">${task.cmd}</div>
         </div>
         
         <div class="detail-section">
