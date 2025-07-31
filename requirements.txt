@@ -2,7 +2,7 @@ Flask==2.0.1
 Flask_Cors==3.0.10
 Flask_SocketIO==5.5.1
 nvidia_ml_py==12.560.30
-pandas==2.2.3
+pandas==2.3.1
 psutil==5.9.0
 pynvml==11.0.0
 torch==2.2.2
