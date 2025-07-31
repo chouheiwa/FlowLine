@@ -7,18 +7,6 @@ import os
 
 logger = Log(__name__)
 
-class FunctionCall:
-    def __init__(self, func, *args, **kwargs):
-        self.func = func
-        self.args = args
-        self.kwargs = kwargs
-        
-    def __call__(self):
-        return self.func(*self.args, **self.kwargs)
-    
-    def __str__(self):
-        #  return self.func(*self.args, **self.kwargs)
-        return f"{self.func.__name__}({self.args}, {self.kwargs})"
         
 class PopenProcess:
     def __init__(self, result_queue, process_id):

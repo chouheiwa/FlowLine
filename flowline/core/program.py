@@ -8,7 +8,8 @@ import os
 from .gpu import GPU_Manager
 from .process import ProcessManager, ProcessStatus
 from .task import TaskManager
-from flowline.utils import FunctionCall, Log
+from flowline.config import config
+from flowline.utils import Log
 
 logger = Log(__name__)
 
@@ -22,6 +23,7 @@ class ProgramManager:
         self.if_run = False
         self._main_thread = None 
         self.func = user_func
+        self.loop_sleep_time = config.DEFAULT_LOOP_SLEEP_TIME
         
     ##################### lock #####################
         
@@ -66,7 +68,8 @@ class ProgramManager:
             logger.info("no task to handle")
             return
         cmd = self.func(dict, gpu_id)
-        if self.process_manager.add_process(cmd, task_id, gpu_id) is None:
+        process = self.process_manager.add_process(cmd, task_id, gpu_id)
+        if process is None:
             self.task_manager.put_task_ids(task_id)
             logger.info(f"failed to create process, task {task_id} put back to queue")
         
@@ -74,7 +77,7 @@ class ProgramManager:
         """main loop, check and create new task"""
         while self.if_run:
             self.new_process()
-            time.sleep(10)
+            time.sleep(self.loop_sleep_time)
         logger.info("main loop stopped")
         
     ##################### operation #####################

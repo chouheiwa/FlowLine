@@ -1,3 +1,5 @@
+const API_BASE_URL = 'http://localhost:5000/api';
+
 // 全局变量
 let currentSettings = {}; // 存储当前设置
 let hasChanges = false; // 跟踪是否有未保存的更改
@@ -301,7 +303,7 @@ function saveSettings(section) {
     hasChanges = false;
     
     // 显示提示
-    showToast(`${getSectionName(section)}已保存`);
+    showToast(`${getSectionName(section)}尚未开放`);
 }
 
 // 重置设置
@@ -318,50 +320,22 @@ function resetSettings() {
 
 // 加载系统信息
 function loadSystemInfo() {
-    // 模拟API请求获取系统信息
-    setTimeout(() => {
-        // 实际应该是 fetch('/api/system/info').then(response => response.json()).then(data => {...})
-        
-        // 模拟数据
-        const systemInfo = 'Linux 5.15.0-52-generic, CPU: 16核, 内存: 64GB';
-        systemInfoEl.textContent = systemInfo;
-    }, 500);
+    fetch(`${API_BASE_URL}/system/info`).then(response => response.text()).then(data => {
+        systemInfoEl.textContent = data;
+    });
 }
 
 // 更新运行时间
 function updateUptime() {
-    // 模拟API请求获取运行时间
-    setTimeout(() => {
-        // 实际应该是 fetch('/api/system/uptime').then(response => response.json()).then(data => {...})
-        
-        // 模拟数据
-        const uptimeData = {
-            days: 3,
-            hours: 14,
-            minutes: 27,
-            seconds: 15
-        };
-        
-        const uptime = `${uptimeData.days}天 ${uptimeData.hours}小时 ${uptimeData.minutes}分钟 ${uptimeData.seconds}秒`;
+    fetch(`${API_BASE_URL}/system/uptime`).then(response => response.json()).then(data => {
+        const uptime = `${data.days}天 ${data.hours}小时 ${data.minutes}分钟 ${data.seconds}秒`;
         uptimeEl.textContent = uptime;
-    }, 300);
+    });
 }
 
 // 检查更新
 function checkUpdates() {
-    // 模拟API请求检查更新
-    setTimeout(() => {
-        // 实际应该是 fetch('/api/system/check-updates').then(response => response.json()).then(data => {...})
-        
-        // 模拟数据
-        const hasUpdate = Math.random() > 0.7; // 30%的概率有更新
-        
-        if (hasUpdate) {
-            showToast('发现新版本: 1.3.0，请联系管理员进行更新');
-        } else {
-            showToast('当前已是最新版本');
-        }
-    }, 1000);
+    showToast('尚未开放', 3000, 'error');
 }
 
 // 查看系统日志

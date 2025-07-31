@@ -25,7 +25,7 @@ if __name__ == "__main__":
     #     print("CUDA is not available.")
     
     while True:
-        print(time.time(),args.test)
+        print(time.time(),args)
         time.sleep(1)
 
         # raise Exception("test error")

@@ -43,19 +43,18 @@ class TaskManager:
     def __init__(self, excel_path):
         self._lock = threading.Lock()
         self.excel_path = excel_path
-        logger.info(f"读取配置文件: {excel_path}")
+        logger.info(f"read excel: {excel_path}")
         self.df = pd.read_excel(excel_path)
         self.format_tidy_df()
         self.df.to_excel(excel_path, index=False)   
 
         self.tasks = []
-        for idx, row in self.df.iloc[:].iterrows():
-            config_dict = row.drop('run_num').to_dict()
-            self.tasks.append(Task(idx, config_dict, row['run_num'], row['need_run_num'], row['name'], row['cmd']))
-
         self.task_ids = queue.PriorityQueue()
-        for id in self.get_task_ids():
-            self.task_ids.put(id)
+        for idx, row in self.df.iloc[:].iterrows():
+            config_dict = row.drop(['run_num', 'need_run_num', 'name', 'cmd']).to_dict()
+            self.tasks.append(Task(idx, config_dict, row['run_num'], row['need_run_num'], row['name'], row['cmd']))
+            for _ in range(row['need_run_num']-row['run_num']):
+                self.task_ids.put(idx)
 
     def format_tidy_df(self):
         if 'run_num' not in self.df.columns:
@@ -72,10 +71,6 @@ class TaskManager:
             with self._lock:
                 return func(self, *args, **kwargs)
         return wrapper
-
-    def get_task_ids(self):
-        todo_df = self.df[self.df['run_num']==0]
-        return list(todo_df.index)
     
     # -------------------------------
     

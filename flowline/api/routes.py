@@ -1,6 +1,8 @@
 import datetime
 import os
 import re
+import platform
+import psutil
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -14,6 +16,7 @@ logger = Log(__name__)
 app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app)
+start_time = datetime.datetime.now()
 
 program_manager = None
 
@@ -211,6 +214,24 @@ def log_lines(log_file_path, max_lines):
             })
     return result
 
+@app.route('/api/system/info', methods=['GET'])
+def get_system_info():
+     # 操作系统和内核版本
+    os_info = f"{platform.system()} {platform.release()}"
+    
+    # CPU 核心数（逻辑核数）
+    cpu_count = os.cpu_count()
+
+    # 内存总量（单位：GB，保留两位小数）
+    mem = psutil.virtual_memory()
+    mem_total_gb = round(mem.total / (1024 ** 3), 2)
+
+    return f"{os_info}, CPU: {cpu_count} cores, Memory: {mem_total_gb} GB"
+
+@app.route('/api/system/uptime', methods=['GET'])
+def get_uptime():
+    uptime = datetime.datetime.now() - start_time
+    return jsonify({'days': uptime.days, 'hours': uptime.seconds // 3600, 'minutes': (uptime.seconds % 3600) // 60, 'seconds': uptime.seconds % 60})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True) 
@@ -223,6 +244,7 @@ curl -X POST http://127.0.0.1:5000/api/run
 curl http://127.0.0.1:5000/api/process
 curl http://127.0.0.1:5000/api/gpus
 curl http://127.0.0.1:5000/api/task/list
+curl http://127.0.0.1:5000/api/system/info
 
 curl http://127.0.0.1:5000/api/log/flowline.core.program.log?maxLines=1000
 """
