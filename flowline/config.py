@@ -6,6 +6,7 @@ class BaseConfig:
     DEFAULT_MIN_PROCESS_MEMORY = 10000 # MB
     DEFAULT_MAX_PROCESSES = 4
     DEBUG = False
+    DEFAULT_LOOP_SLEEP_TIME = 10
 
 class DevConfig(BaseConfig):
     DEBUG = True

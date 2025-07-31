@@ -3,7 +3,7 @@ import time
 import threading
 
 from flowline.config import config
-from flowline.utils import FunctionCall, PopenProcess, Log
+from flowline.utils import PopenProcess, Log
 
 logger = Log(__name__)
 
@@ -161,10 +161,10 @@ class ProcessManager:
                 return None
             process = Process(next(self.process_id_gen), cmd, task_id, gpu_id, self.on_process_state)
             self.processes.append(process)
-            return True
+            return process
         except Exception as e:
             logger.error(f"ProcessManager add_process: Failed to add process: {e}")
-            return False
+            return None
             
     def kill_process_by_gpu(self, gpu_id: int):
         processes_to_kill = [p for p in self.processes if p.gpu_id == gpu_id]
@@ -209,13 +209,13 @@ if __name__ == "__main__":
     def func(k, v):
         return f"CUDA_VISIBLE_DEVICES={k} python test.py --test {v}"
             
-    fc1 = FunctionCall(func, 4, "a")
-    # fc2 = FunctionCall(func, 5, "b")
+    cmd1 = func(4, "a")
+    # cmd2 = func(5, "b")
     
     process_manager = ProcessManager(on_completed)
     
-    process_manager.add_process(fc1(), 1, 4)
-    # process_manager.add_process(fc2(), 2, 4)
+    process_manager.add_process(cmd1, 1, 4)
+    # process_manager.add_process(cmd2, 2, 4)
     
     # time.sleep(5)
     

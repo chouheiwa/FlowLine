@@ -1,5 +1,7 @@
+# api+web 分离式服务器示例
+
 from flowline import get_app
-from flask_cors import CORS  # 添加CORS支持
+from flask_cors import CORS
 
 def func(dict, gpu_id):
     return "CUDA_VISIBLE_DEVICES="+str(gpu_id)+" python -u test/test.py "+ " ".join([f"--{k}={v}" for k, v in dict.items()])
