@@ -117,11 +117,10 @@ log/
 
 ### 1. 启动后端 API 服务
 
-后端为 Flask 应用，运行 `server.py` 启动服务：
+后端为 Flask 应用，运行 `main_server.py` 启动服务：
 
 ```bash
-cd flowline
-python server.py
+python main_server.py
 ```
 
 ### 2. 启动前端界面服务

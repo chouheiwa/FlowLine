@@ -56,10 +56,17 @@ class GPU:
         free_memory = memory_info.free / (1024 ** 2)
         utilization = utilization_info.gpu
         all_process_num = len(process_info)
-        name = pynvml.nvmlDeviceGetName(handle).decode('utf-8')
+        gpu_name = pynvml.nvmlDeviceGetName(handle)
+        name = gpu_name.decode('utf-8') if isinstance(gpu_name, bytes) else gpu_name
         temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
         power = pynvml.nvmlDeviceGetPowerUsage(handle) / 1000
-        max_power = pynvml.nvmlDeviceGetPowerManagementLimit(handle) / 1000
+        try:
+            max_power = pynvml.nvmlDeviceGetPowerManagementLimit(handle) / 1000
+        except pynvml.NVMLError as e:
+            if e.value == pynvml.NVML_ERROR_NOT_SUPPORTED:
+                max_power = '?'
+            else:
+                raise
             
         self.info = GPU_info(free_memory, total_memory, utilization, all_process_num, name, temperature, power, max_power)
         self.info_history.append(self.info)
