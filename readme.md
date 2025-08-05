@@ -1,5 +1,7 @@
 # FlowLine
 
+中文 | [English](./flowline/readme_en.md)
+
 FlowLine 是一个用于 **GPU资源管理** 和 **并发指令流调度** 的自动化系统，支持 **命令行界面（CLI）** 和 **Web 图形界面（GUI）** 两种交互方式，适用于多任务实验、深度学习训练或高并发计算环境。
 
 * 📘 **API 使用说明**：详见 [API文档](./docs/api.md)
@@ -24,8 +26,16 @@ FlowLine 是一个用于 **GPU资源管理** 和 **并发指令流调度** 的�
 
 你可以将 `flowline` 文件夹拷贝到项目的根目录下直接引用，也可以通过以下方式将其安装到你的 Python 环境中：
 
+- 从pip安装
+
 ```bash
-pip install -e ./flowline
+pip install fline
+```
+
+- 或者从源代码安装
+
+```bash
+pip install -e <flowline库路径>
 ```
 
 > 注：请确保你已安装 `pandas`、`psutil`、`openpyxl` 等`requirements.txt`内的基本依赖。
