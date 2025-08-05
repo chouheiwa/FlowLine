@@ -1,6 +1,6 @@
 # FlowLine
 
-中文 | [English](./flowline/readme_en.md)
+中文 | [English](./readme_en.md)
 
 FlowLine 是一个用于 **GPU资源管理** 和 **并发指令流调度** 的自动化系统，支持 **命令行界面（CLI）** 和 **Web 图形界面（GUI）** 两种交互方式，适用于多任务实验、深度学习训练或高并发计算环境。
 
