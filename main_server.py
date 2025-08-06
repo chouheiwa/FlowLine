@@ -13,7 +13,8 @@ def main():
     前端静态文件需要通过单独的命令提供：
     cd web && python -m http.server 8000
     """
-    app = get_app(func, "test/todo.xlsx")
+    # 使用SQLite数据库替代Excel文件
+    app = get_app(func, "demo_tasks.db")  # 或者使用 "tasks.db"
     CORS(app)
     app.run(host='0.0.0.0', port=5000, debug=True)
 

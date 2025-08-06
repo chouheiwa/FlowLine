@@ -14,11 +14,11 @@ from flowline.utils import Log
 logger = Log(__name__)
 
 class ProgramManager:
-    def __init__(self, user_func, task_dir):
+    def __init__(self, user_func, task_db_path="tasks.db"):
         self._lock = threading.Lock()
         self.gpu_manager = GPU_Manager([0], self.on_gpu_flash)
         self.process_manager = ProcessManager(self.on_process_changed)
-        self.task_manager = TaskManager(task_dir)
+        self.task_manager = TaskManager(task_db_path)
         
         self.if_run = False
         self._main_thread = None 
@@ -141,8 +141,8 @@ class ProgramManager:
     def get_task_dict(self):
         return self.task_manager.get_task_dict()
 
-    def create_task(self, task_dict):
-        return self.task_manager.create_task(task_dict)
+    def create_task(self, name: str, cmd: str, need_run_num: int = 1, config_dict: dict = None):
+        return self.task_manager.create_task(name, cmd, need_run_num, config_dict)
 
 if __name__ == "__main__":
     def func(dict, gpu_id):

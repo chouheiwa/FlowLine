@@ -20,10 +20,10 @@ start_time = datetime.datetime.now()
 
 program_manager = None
 
-def get_app(func, task_dir=None):
+def get_app(func, task_db_path="tasks.db"):
     try:
         global program_manager
-        program_manager = ProgramManager(func, task_dir)
+        program_manager = ProgramManager(func, task_db_path)
         logger.info("ProgramManager initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize ProgramManager: {e}")
@@ -95,7 +95,16 @@ def get_task_list():
 @app.route('/api/task/create', methods=['POST'])
 def create_task():
     try:
-        if_success = program_manager.create_task(request.json)
+        data = request.json
+        name = data.get('name', 'Unnamed Task')
+        cmd = data.get('cmd', '')
+        need_run_num = data.get('need_run_num', 1)
+        config_dict = data.get('config_dict', {})
+        
+        if not cmd:
+            return jsonify({'success': False, 'error': 'Command is required'})
+            
+        if_success = program_manager.create_task(name, cmd, need_run_num, config_dict)
         return jsonify({'success': if_success})
     except Exception as e:
         logger.error(f"Error creating task: {e}")
