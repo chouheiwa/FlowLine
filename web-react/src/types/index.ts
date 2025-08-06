@@ -25,6 +25,25 @@ export interface TaskInfo {
   command: string
   startTime: string
   runTime: string
+  working_dir?: string
+  name?: string
+  need_run_num?: number
+  run_num?: number
+  config_dict?: Record<string, any>
+}
+
+export interface CreateTaskRequest {
+  name: string
+  cmd: string
+  working_dir?: string
+  need_run_num?: number
+  config_dict?: Record<string, any>
+}
+
+export interface CopyTaskRequest {
+  original_task_id: number
+  new_name: string
+  need_run_num: number
 }
 
 export interface LogFile {

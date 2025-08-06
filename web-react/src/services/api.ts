@@ -1,7 +1,7 @@
 import axios from 'axios'
-import { GpuInfo, TaskInfo } from '../types'
+import { GpuInfo, TaskInfo, CreateTaskRequest, CopyTaskRequest } from '../types'
 
-const API_BASE_URL = `/api`
+const API_BASE_URL = `http://localhost:5001/api`
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -113,15 +113,50 @@ export const systemApi = {
 
 // 任务相关API
 export const taskApi = {
+  // 获取所有任务
+  getTasks: async (): Promise<any[]> => {
+    try {
+      // 优先尝试新的任务API
+      const response = await api.get('/task/list')
+      return response.data.tasks || []
+    } catch (error) {
+      console.warn('新任务API不可用，降级到进程API:', error)
+      // 降级到进程API
+      return processApi.getProcesses()
+    }
+  },
+
   // 创建任务
-  createTask: async (taskData: { name: string; command: string }) => {
-    const response = await api.post('/tasks', taskData)
+  createTask: async (taskData: CreateTaskRequest) => {
+    const response = await api.post('/task/create', {
+      name: taskData.name,
+      cmd: taskData.cmd,
+      working_dir: taskData.working_dir,
+      need_run_num: taskData.need_run_num || 1,
+      config_dict: taskData.config_dict || {}
+    })
+    return response.data
+  },
+
+  // 复制任务
+  copyTask: async (copyData: CopyTaskRequest) => {
+    const response = await api.post('/task/copy', {
+      original_task_id: copyData.original_task_id,
+      new_name: copyData.new_name,
+      need_run_num: copyData.need_run_num
+    })
     return response.data
   },
 
   // 删除任务
   deleteTask: async (taskId: string) => {
-    const response = await api.delete(`/tasks/${taskId}`)
+    const response = await api.delete(`/task/delete/${taskId}`)
+    return response.data
+  },
+
+  // 获取任务详情
+  getTaskDetail: async (taskId: string) => {
+    const response = await api.get(`/task/detail/${taskId}`)
     return response.data
   }
 }

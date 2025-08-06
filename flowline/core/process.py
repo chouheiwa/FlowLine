@@ -25,7 +25,7 @@ PENDING ─> RUNNING ─> COMPLETED √
 """
 
 class Process:
-    def __init__(self, process_id: int, cmd: str, task_id: int, gpu_id: int, on_status_changed=None):
+    def __init__(self, process_id: int, cmd: str, task_id: int, gpu_id: int, working_dir: str = None, on_status_changed=None):
         self.manager = multiprocessing.Manager()
         self.shared_dict = self.manager.dict()
         self.shared_dict["status"] = ProcessStatus.PENDING
@@ -35,6 +35,7 @@ class Process:
         self.cmd = cmd
         self.task_id = task_id
         self.gpu_id = gpu_id
+        self.working_dir = working_dir
         self.start_time = time.time()
         
         self.pid = None
@@ -57,7 +58,7 @@ class Process:
         
     def run(self):
         try:
-            self._process = multiprocessing.Process(target=PopenProcess(self.result_queue, self.process_id).fcb, args=(self.cmd,))
+            self._process = multiprocessing.Process(target=PopenProcess(self.result_queue, self.process_id, self.working_dir).fcb, args=(self.cmd,))
             self._process.daemon = True
             self._process.start()
             self.change_status(ProcessStatus.RUNNING)
@@ -154,12 +155,12 @@ class ProcessManager:
         self.processes.remove(process)
         
     @synchronized
-    def add_process(self, cmd: str, task_id: int, gpu_id: int):
+    def add_process(self, cmd: str, task_id: int, gpu_id: int, working_dir: str = None):
         try:
             if not self.have_space():
                 logger.warning(f"ProcessManager: Process number exceeds the maximum limit {self.max_processes}")
                 return None
-            process = Process(next(self.process_id_gen), cmd, task_id, gpu_id, self.on_process_state)
+            process = Process(next(self.process_id_gen), cmd, task_id, gpu_id, working_dir, self.on_process_state)
             self.processes.append(process)
             return process
         except Exception as e:

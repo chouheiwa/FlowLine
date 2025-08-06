@@ -1,5 +1,6 @@
 # api+web 分离式服务器示例
 
+import argparse
 from flowline import get_app
 from flask_cors import CORS
 
@@ -13,10 +14,14 @@ def main():
     前端静态文件需要通过单独的命令提供：
     cd web && python -m http.server 8000
     """
+    parser = argparse.ArgumentParser(description='FlowLine API Server')
+    parser.add_argument('--port', type=int, default=5000, help='Port to run the server on')
+    args = parser.parse_args()
+    
     # 使用SQLite数据库替代Excel文件
     app = get_app(func, "demo_tasks.db")  # 或者使用 "tasks.db"
     CORS(app)
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=args.port, debug=True)
 
 def main2():
     # TODO: 集成式服务器，同时提供API和前端静态文件 

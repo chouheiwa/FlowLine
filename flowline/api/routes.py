@@ -6,7 +6,7 @@ import psutil
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from flask_socketio import SocketIO, send, emit
+# from flask_socketio import SocketIO, send, emit
 
 from flowline.core import ProgramManager
 from flowline.utils import Log
@@ -15,7 +15,7 @@ from flowline.utils import Log
 logger = Log(__name__)
 app = Flask(__name__)
 CORS(app)
-socketio = SocketIO(app)
+# socketio = SocketIO(app)
 start_time = datetime.datetime.now()
 
 program_manager = None
@@ -91,6 +91,18 @@ def get_task_list():
     except Exception as e:
         logger.error(f"Error getting tasks: {e}")
         return jsonify({'error': str(e)})
+
+@app.route('/api/task/<int:task_id>', methods=['GET'])
+def get_task_detail(task_id):
+    try:
+        task_detail = program_manager.get_task_detail(task_id)
+        if task_detail:
+            return jsonify(task_detail)
+        else:
+            return jsonify({'error': 'Task not found'}), 404
+    except Exception as e:
+        logger.error(f"Error getting task detail: {e}")
+        return jsonify({'error': str(e)})
     
 @app.route('/api/task/create', methods=['POST'])
 def create_task():
@@ -100,14 +112,47 @@ def create_task():
         cmd = data.get('cmd', '')
         need_run_num = data.get('need_run_num', 1)
         config_dict = data.get('config_dict', {})
+        working_dir = data.get('working_dir', None)
         
         if not cmd:
             return jsonify({'success': False, 'error': 'Command is required'})
             
-        if_success = program_manager.create_task(name, cmd, need_run_num, config_dict)
-        return jsonify({'success': if_success})
+        task_id = program_manager.create_task(name, cmd, need_run_num, config_dict, working_dir)
+        if task_id:
+            return jsonify({'success': True, 'task_id': task_id})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to create task'})
     except Exception as e:
         logger.error(f"Error creating task: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/task/copy', methods=['POST'])
+def copy_task():
+    try:
+        data = request.json
+        original_task_id = data.get('original_task_id')
+        new_name = data.get('new_name', None)
+        need_run_num = data.get('need_run_num', None)
+        
+        if original_task_id is None:
+            return jsonify({'success': False, 'error': 'Original task ID is required'})
+            
+        new_task_id = program_manager.copy_task(original_task_id, new_name, need_run_num)
+        if new_task_id:
+            return jsonify({'success': True, 'new_task_id': new_task_id})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to copy task'})
+    except Exception as e:
+        logger.error(f"Error copying task: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/task/<int:task_id>', methods=['DELETE'])
+def delete_task(task_id):
+    try:
+        if_success = program_manager.delete_task(task_id)
+        return jsonify({'success': if_success})
+    except Exception as e:
+        logger.error(f"Error deleting task: {e}")
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/log/list', methods=['GET'])

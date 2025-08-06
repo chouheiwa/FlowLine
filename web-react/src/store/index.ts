@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { GpuInfo, TaskInfo, Settings } from '../types'
-import { gpuApi, processApi, systemApi } from '../services/api'
+import { gpuApi, processApi, systemApi, taskApi } from '../services/api'
 
 interface AppState {
   // GPU相关状态
@@ -81,7 +81,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   fetchTasks: async () => {
     try {
-      const tasks = await processApi.getProcesses()
+      const tasks = await taskApi.getTasks()
       set({ tasks })
     } catch (error) {
       console.error('Failed to fetch tasks:', error)

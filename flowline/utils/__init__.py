@@ -9,9 +9,10 @@ logger = Log(__name__)
 
         
 class PopenProcess:
-    def __init__(self, result_queue, process_id):
+    def __init__(self, result_queue, process_id, working_dir=None):
         self.process_id = process_id
         self.result_queue = result_queue
+        self.working_dir = working_dir
         self.popen_process = None
 
     def fcb(self, cmd):
@@ -30,6 +31,7 @@ class PopenProcess:
                     stdout=stdout_f,
                     stderr=stderr_f,
                     shell=True,
+                    cwd=self.working_dir,
                 )
                 self.popen_process.wait()
             

@@ -32,6 +32,7 @@ class TaskModel(Base):
     run_num = Column(Integer, default=0, nullable=False)
     need_run_num = Column(Integer, default=1, nullable=False)
     config_dict = Column(JSON, nullable=True)  # 存储配置字典
+    working_dir = Column(String(500), nullable=True)  # 工作目录
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -49,6 +50,7 @@ class TaskModel(Base):
             "need_run_num": self.need_run_num,
             "name": self.name,
             "cmd": self.cmd,
+            "working_dir": self.working_dir,
             "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
@@ -87,6 +89,10 @@ class Task:
     @property
     def cmd(self) -> str:
         return self._model.cmd
+    
+    @property
+    def working_dir(self) -> Optional[str]:
+        return self._model.working_dir
     
     @property
     def state(self) -> str:
@@ -199,7 +205,8 @@ class TaskManager:
 
     @synchronized
     def create_task(self, name: str, cmd: str, need_run_num: int = 1, 
-                   config_dict: Optional[Dict[str, Any]] = None) -> Optional[int]:
+                   config_dict: Optional[Dict[str, Any]] = None,
+                   working_dir: Optional[str] = None) -> Optional[int]:
         """创建新任务"""
         try:
             with self._get_session() as session:
@@ -207,7 +214,8 @@ class TaskManager:
                     name=name,
                     cmd=cmd,
                     need_run_num=need_run_num,
-                    config_dict=config_dict or {}
+                    config_dict=config_dict or {},
+                    working_dir=working_dir
                 )
                 session.add(new_task)
                 session.commit()
@@ -263,6 +271,46 @@ class TaskManager:
         except Exception as e:
             logger.error(f"Failed to update task {task_id}: {e}")
             return False
+
+    @synchronized
+    def copy_task(self, task_id: int, new_name: Optional[str] = None, 
+                  new_need_run_num: Optional[int] = None) -> Optional[int]:
+        """拷贝已存在的任务"""
+        try:
+            with self._get_session() as session:
+                # 获取原任务
+                original_task = session.query(TaskModel).filter(TaskModel.id == task_id).first()
+                if not original_task:
+                    logger.error(f"Task {task_id} not found for copying")
+                    return None
+                
+                # 创建新任务名称
+                if new_name is None:
+                    new_name = f"{original_task.name} (副本)"
+                
+                # 创建新任务
+                new_task = TaskModel(
+                    name=new_name,
+                    cmd=original_task.cmd,
+                    need_run_num=new_need_run_num or original_task.need_run_num,
+                    config_dict=original_task.config_dict.copy() if original_task.config_dict else {},
+                    working_dir=original_task.working_dir,
+                    run_num=0  # 新任务从0开始
+                )
+                
+                session.add(new_task)
+                session.commit()
+                
+                # 将新任务加入队列
+                for _ in range(new_task.need_run_num):
+                    self.task_ids.put(new_task.id)
+                
+                logger.info(f"Copied task {task_id} to new task {new_task.id}: {new_name}")
+                return new_task.id
+                
+        except Exception as e:
+            logger.error(f"Failed to copy task {task_id}: {e}")
+            return None
 
 # task_manager = TaskManager()
 

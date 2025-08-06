@@ -1,4 +1,9 @@
-import pynvml
+try:
+    import pynvml
+    PYNVML_AVAILABLE = True
+except ImportError:
+    PYNVML_AVAILABLE = False
+    
 import time
 import threading
 
@@ -46,36 +51,74 @@ class GPU:
         self.monitor_thread = self._run_monitor()
         
     def flash(self):
-        pynvml.nvmlInit()
-        handle = pynvml.nvmlDeviceGetHandleByIndex(self.gpu_id)
-        memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-        utilization_info = pynvml.nvmlDeviceGetUtilizationRates(handle)
-        process_info = pynvml.nvmlDeviceGetComputeRunningProcesses(handle)
-
-        total_memory = memory_info.total / (1024 ** 2)
-        free_memory = memory_info.free / (1024 ** 2)
-        utilization = utilization_info.gpu
-        all_process_num = len(process_info)
-        gpu_name = pynvml.nvmlDeviceGetName(handle)
-        name = gpu_name.decode('utf-8') if isinstance(gpu_name, bytes) else gpu_name
-        temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
-        power = pynvml.nvmlDeviceGetPowerUsage(handle) / 1000
-        try:
-            max_power = pynvml.nvmlDeviceGetPowerManagementLimit(handle) / 1000
-        except pynvml.NVMLError as e:
-            if e.value == pynvml.NVML_ERROR_NOT_SUPPORTED:
-                max_power = '?'
-            else:
-                raise
+        if not PYNVML_AVAILABLE:
+            # 模拟GPU信息用于非GPU环境
+            total_memory = 8192  # 8GB
+            free_memory = 6144   # 6GB
+            utilization = 0
+            all_process_num = 0
+            name = f"Virtual GPU {self.gpu_id}"
+            temperature = 45
+            power = 50
+            max_power = 250
             
-        self.info = GPU_info(free_memory, total_memory, utilization, all_process_num, name, temperature, power, max_power)
-        self.info_history.append(self.info)
-        self.info_history = self.info_history[-self.info_history_length:]
-        
-        # logger.info(f"GPU: GPU {self.gpu_id} flashed") 
-        if self.on_flash:
-            self.on_flash(self.gpu_id, self.info)
-        pynvml.nvmlShutdown()
+            self.info = GPU_info(free_memory, total_memory, utilization, all_process_num, name, temperature, power, max_power)
+            self.info_history.append(self.info)
+            self.info_history = self.info_history[-self.info_history_length:]
+            
+            if self.on_flash:
+                self.on_flash(self.gpu_id, self.info)
+            return
+            
+        try:
+            pynvml.nvmlInit()
+            handle = pynvml.nvmlDeviceGetHandleByIndex(self.gpu_id)
+            memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+            utilization_info = pynvml.nvmlDeviceGetUtilizationRates(handle)
+            process_info = pynvml.nvmlDeviceGetComputeRunningProcesses(handle)
+
+            total_memory = memory_info.total / (1024 ** 2)
+            free_memory = memory_info.free / (1024 ** 2)
+            utilization = utilization_info.gpu
+            all_process_num = len(process_info)
+            gpu_name = pynvml.nvmlDeviceGetName(handle)
+            name = gpu_name.decode('utf-8') if isinstance(gpu_name, bytes) else gpu_name
+            temperature = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
+            power = pynvml.nvmlDeviceGetPowerUsage(handle) / 1000
+            try:
+                max_power = pynvml.nvmlDeviceGetPowerManagementLimit(handle) / 1000
+            except pynvml.NVMLError as e:
+                if e.value == pynvml.NVML_ERROR_NOT_SUPPORTED:
+                    max_power = '?'
+                else:
+                    raise
+                
+            self.info = GPU_info(free_memory, total_memory, utilization, all_process_num, name, temperature, power, max_power)
+            self.info_history.append(self.info)
+            self.info_history = self.info_history[-self.info_history_length:]
+            
+            # logger.info(f"GPU: GPU {self.gpu_id} flashed") 
+            if self.on_flash:
+                self.on_flash(self.gpu_id, self.info)
+            pynvml.nvmlShutdown()
+        except Exception as e:
+            logger.error(f"Error flashing GPU {self.gpu_id}: {e}")
+            # 回退到模拟模式
+            total_memory = 8192
+            free_memory = 6144
+            utilization = 0
+            all_process_num = 0
+            name = f"Virtual GPU {self.gpu_id}"
+            temperature = 45
+            power = 50
+            max_power = 250
+            
+            self.info = GPU_info(free_memory, total_memory, utilization, all_process_num, name, temperature, power, max_power)
+            self.info_history.append(self.info)
+            self.info_history = self.info_history[-self.info_history_length:]
+            
+            if self.on_flash:
+                self.on_flash(self.gpu_id, self.info)
         
     def _monitor_gpu(self):
         while True:
@@ -95,10 +138,18 @@ class GPU:
         return f"GPU:{self.gpu_id}"
     
 def get_gpu_count():
-    pynvml.nvmlInit()
-    gpu_count = pynvml.nvmlDeviceGetCount()
-    pynvml.nvmlShutdown()
-    return gpu_count
+    if not PYNVML_AVAILABLE:
+        # 在非GPU环境中返回1个虚拟GPU
+        return 1
+        
+    try:
+        pynvml.nvmlInit()
+        gpu_count = pynvml.nvmlDeviceGetCount()
+        pynvml.nvmlShutdown()
+        return gpu_count
+    except Exception as e:
+        logger.warning(f"Failed to get GPU count: {e}, falling back to virtual GPU")
+        return 1
     
 class GPU_Manager:
     def __init__(self, use_gpu_id: list, on_flash=None):

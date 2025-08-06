@@ -63,12 +63,13 @@ class ProgramManager:
         if gpu_id is None:
             logger.info(f"no available GPU")
             return
-        task_id, dict = self.task_manager.get_next_task()
-        if task_id is None:
+        task = self.task_manager.get_next_task()
+        if task is None:
             logger.info("no task to handle")
             return
-        cmd = self.func(dict, gpu_id)
-        process = self.process_manager.add_process(cmd, task_id, gpu_id)
+        task_id = task.id
+        cmd = self.func(task.to_dict(), gpu_id)
+        process = self.process_manager.add_process(cmd, task_id, gpu_id, task.working_dir)
         if process is None:
             self.task_manager.put_task_ids(task_id)
             logger.info(f"failed to create process, task {task_id} put back to queue")
@@ -141,8 +142,18 @@ class ProgramManager:
     def get_task_dict(self):
         return self.task_manager.get_task_dict()
 
-    def create_task(self, name: str, cmd: str, need_run_num: int = 1, config_dict: dict = None):
-        return self.task_manager.create_task(name, cmd, need_run_num, config_dict)
+    def create_task(self, name: str, cmd: str, need_run_num: int = 1, config_dict: dict = None, working_dir: str = None):
+        return self.task_manager.create_task(name, cmd, need_run_num, config_dict, working_dir)
+    
+    def copy_task(self, task_id: int, new_name: str = None, new_need_run_num: int = None):
+        return self.task_manager.copy_task(task_id, new_name, new_need_run_num)
+    
+    def get_task_detail(self, task_id: int):
+        task = self.task_manager.get_task_by_id(task_id)
+        return task.get_dict() if task else None
+    
+    def delete_task(self, task_id: int):
+        return self.task_manager.delete_task(task_id)
 
 if __name__ == "__main__":
     def func(dict, gpu_id):
